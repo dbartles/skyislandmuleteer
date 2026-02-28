@@ -93,7 +93,7 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
         h: window.game.map.height,
         entities: window.game.entities.length
     }));
-    check('Map is 280x140', mapInfo.w === 280 && mapInfo.h === 140);
+    check('Map is 560x280', mapInfo.w === 560 && mapInfo.h === 280);
     check('100+ entities spawned', mapInfo.entities > 100);
 
     // === Feature: Entity colors (bright red/yellow) ===

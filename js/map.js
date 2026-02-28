@@ -222,7 +222,7 @@ class GameMap {
 
     _generateWashes() {
         const rng = ROT.RNG;
-        const numWashes = 15 + Math.floor(rng.getUniform() * 10);
+        const numWashes = 40 + Math.floor(rng.getUniform() * 20);
         for (let i = 0; i < numWashes; i++) {
             let x = Math.floor(rng.getUniform() * this.width);
             let y = Math.floor(rng.getUniform() * this.height);
@@ -259,7 +259,7 @@ class GameMap {
     _generateWaterSources() {
         const rng = ROT.RNG;
         // Cenotes (tanks) in the desert - larger clearings
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 30; i++) {
             let attempts = 0;
             while (attempts < 80) {
                 const x = Math.floor(rng.getUniform() * this.width);
@@ -351,8 +351,8 @@ class GameMap {
                 const a = LOCATIONS[i];
                 const b = LOCATIONS[j];
                 const dist = Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
-                if (dist < 60) {
-                    this._carveRoad(a.x, a.y, b.x, b.y, dist < 30 ? 'ROAD' : 'TRAIL');
+                if (dist < 120) {
+                    this._carveRoad(a.x, a.y, b.x, b.y, dist < 60 ? 'ROAD' : 'TRAIL');
                 }
             }
         }
@@ -393,6 +393,52 @@ class GameMap {
 
     _placeLocation(loc) {
         const size = loc.size || 3;
+
+        if (loc.type === 'tanks') {
+            // Hueco Tanks: cenote center, bones ring, boulder/canyon wall outer ring
+            this.tiles[loc.y][loc.x] = 'CAMPFIRE';
+            // Inner ring: cenote water basin
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = loc.x + dx, ny = loc.y + dy;
+                    if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height) {
+                        this.tiles[ny][nx] = 'CENOTE';
+                    }
+                }
+            }
+            // Middle ring: bones and town floor
+            for (let dy = -3; dy <= 3; dy++) {
+                for (let dx = -3; dx <= 3; dx++) {
+                    const dist = Math.abs(dx) + Math.abs(dy);
+                    if (dist < 2 || dist > 4) continue;
+                    const nx = loc.x + dx, ny = loc.y + dy;
+                    if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height) {
+                        if (dist === 2) {
+                            this.tiles[ny][nx] = 'BONES';
+                        } else {
+                            this.tiles[ny][nx] = 'TOWN_FLOOR';
+                        }
+                    }
+                }
+            }
+            // Outer ring: sandstone cliffs (boulders and canyon walls)
+            for (let dy = -size; dy <= size; dy++) {
+                for (let dx = -size; dx <= size; dx++) {
+                    const dist = Math.abs(dx) + Math.abs(dy);
+                    if (dist < 5 || dist > size + 1) continue;
+                    const nx = loc.x + dx, ny = loc.y + dy;
+                    if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height) {
+                        if (Math.abs(dx) === size || Math.abs(dy) === size) {
+                            this.tiles[ny][nx] = 'CANYON_WALL';
+                        } else {
+                            this.tiles[ny][nx] = ROT.RNG.getUniform() < 0.5 ? 'BOULDER' : 'CANYON_WALL';
+                        }
+                    }
+                }
+            }
+            return;
+        }
 
         if (loc.type === 'camp') {
             this.tiles[loc.y][loc.x] = 'CAMPFIRE';
@@ -452,7 +498,7 @@ class GameMap {
 
     _generateAtmosphere() {
         const rng = ROT.RNG;
-        for (let i = 0; i < 60; i++) {
+        for (let i = 0; i < 180; i++) {
             const x = Math.floor(rng.getUniform() * this.width);
             const y = Math.floor(rng.getUniform() * this.height);
             if (this._isDesert(this.tiles[y][x])) {

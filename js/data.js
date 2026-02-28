@@ -4,8 +4,8 @@
 // Edit this file to change game content without touching code
 // ============================================================
 
-const MAP_WIDTH = 280;
-const MAP_HEIGHT = 140;
+const MAP_WIDTH = 560;
+const MAP_HEIGHT = 280;
 const VIEWPORT_W = 65;
 const VIEWPORT_H = 33;
 const FOV_RADIUS = 14;
@@ -105,42 +105,43 @@ const ENTITY_TYPES = {
     PADRE:            { char: 'p', fg: '#887766', name: 'Padre',                  hp: 4,  atk: 0, def: 0, speed: 1, hostile: false, aggroRange: 0, xp: 0, desc: 'A priest in black robes. He mutters prayers as he walks.' },
 };
 
-// ---- MOUNTAIN RANGES (scaled 2x) ----
+// ---- MOUNTAIN RANGES (scaled 4x) ----
 const MOUNTAIN_RANGES = [
-    { name: 'Santa Catalina Mtns', cx: 130, cy: 24,  rx: 24, ry: 16 },
-    { name: 'Rincon Mountains',    cx: 160, cy: 32,  rx: 14, ry: 12 },
-    { name: 'Santa Rita Mtns',     cx: 116, cy: 64,  rx: 18, ry: 14 },
-    { name: 'Huachuca Mountains',  cx: 90,  cy: 80,  rx: 16, ry: 12 },
-    { name: 'Chiricahua Mtns',     cx: 220, cy: 56,  rx: 24, ry: 18 },
-    { name: 'Dragoon Mountains',   cx: 190, cy: 52,  rx: 12, ry: 10 },
-    { name: 'Whetstone Mtns',      cx: 136, cy: 76,  rx: 10, ry: 8 },
-    { name: 'Patagonia Mtns',      cx: 100, cy: 72,  rx: 10, ry: 8 },
-    { name: 'Mule Mountains',      cx: 200, cy: 80,  rx: 12, ry: 10 },
-    { name: 'Sierra Cananea',      cx: 110, cy: 104, rx: 16, ry: 12 },
-    { name: 'Sierra Madre',        cx: 160, cy: 116, rx: 20, ry: 14 },
-    { name: 'Baboquivari Peak',    cx: 70,  cy: 60,  rx: 10, ry: 10 },
+    { name: 'Santa Catalina Mtns', cx: 260, cy: 48,  rx: 48, ry: 32 },
+    { name: 'Rincon Mountains',    cx: 320, cy: 64,  rx: 28, ry: 24 },
+    { name: 'Santa Rita Mtns',     cx: 232, cy: 128, rx: 36, ry: 28 },
+    { name: 'Huachuca Mountains',  cx: 180, cy: 160, rx: 32, ry: 24 },
+    { name: 'Chiricahua Mtns',     cx: 440, cy: 112, rx: 48, ry: 36 },
+    { name: 'Dragoon Mountains',   cx: 380, cy: 104, rx: 24, ry: 20 },
+    { name: 'Whetstone Mtns',      cx: 272, cy: 152, rx: 20, ry: 16 },
+    { name: 'Patagonia Mtns',      cx: 200, cy: 144, rx: 20, ry: 16 },
+    { name: 'Mule Mountains',      cx: 400, cy: 160, rx: 24, ry: 20 },
+    { name: 'Sierra Cananea',      cx: 220, cy: 208, rx: 32, ry: 24 },
+    { name: 'Sierra Madre',        cx: 320, cy: 232, rx: 40, ry: 28 },
+    { name: 'Baboquivari Peak',    cx: 140, cy: 120, rx: 20, ry: 20 },
 ];
 
-// ---- LOCATIONS (scaled 2x) ----
+// ---- LOCATIONS (scaled 4x) ----
 const LOCATIONS = [
-    { name: 'Tucson',         x: 124, y: 36,  type: 'town', size: 6, desc: 'A dusty pueblo of adobe and mesquite. The smell of woodsmoke and horses.' },
-    { name: 'Tubac',          x: 110, y: 60,  type: 'town', size: 5, desc: 'The old presidio. Its walls crumbling. Mexicans and Americans eye each other across the plaza.' },
-    { name: 'Ft. Buchanan',   x: 96,  y: 76,  type: 'fort', size: 4, desc: 'A sorry collection of jacales the army calls a fort. Soldiers idle in the shade.' },
-    { name: 'Ft. Bowie',      x: 230, y: 50,  type: 'fort', size: 4, desc: 'Guarding Apache Pass. The Chiricahuas watch from the ridges above.' },
-    { name: 'Tombstone',      x: 196, y: 76,  type: 'town', size: 5, desc: 'Silver country. The hills are alive with prospectors and the men who rob them.' },
-    { name: 'Santa Cruz',     x: 110, y: 92,  type: 'town', size: 4, desc: 'A Mexican village on the river. The church bell rings for vespers.' },
-    { name: 'Magdalena',      x: 100, y: 104, type: 'town', size: 5, desc: 'The fiesta of San Francisco. Pilgrims walk the dusty road from the south.' },
-    { name: 'Arizpe',         x: 150, y: 112, type: 'town', size: 5, desc: 'The old Sonoran capital. Apache scalps hang drying in the plaza.' },
-    { name: 'Hermosillo',     x: 76,  y: 120, type: 'town', size: 6, desc: 'A city of churches and trade. The end of the long road south.' },
-    { name: 'Ft. Crittenden', x: 104, y: 68,  type: 'fort', size: 3, desc: 'Abandoned and reoccupied. The flagpole stands crooked against the sky.' },
-    { name: 'Dragoon Springs', x: 184, y: 60, type: 'camp', size: 2, desc: 'A stage station in the shadow of the Dragoons. Water here, and danger.' },
-    { name: 'Apache Pass',     x: 216, y: 52, type: 'camp', size: 2, desc: 'The spring in the pass. Bones of men and animals mark the approach.' },
+    { name: 'Tucson',         x: 248, y: 72,  type: 'town', size: 6, desc: 'A dusty pueblo of adobe and mesquite. The smell of woodsmoke and horses.' },
+    { name: 'Tubac',          x: 220, y: 120, type: 'town', size: 5, desc: 'The old presidio. Its walls crumbling. Mexicans and Americans eye each other across the plaza.' },
+    { name: 'Ft. Buchanan',   x: 192, y: 152, type: 'fort', size: 4, desc: 'A sorry collection of jacales the army calls a fort. Soldiers idle in the shade.' },
+    { name: 'Ft. Bowie',      x: 460, y: 100, type: 'fort', size: 4, desc: 'Guarding Apache Pass. The Chiricahuas watch from the ridges above.' },
+    { name: 'Tombstone',      x: 392, y: 152, type: 'town', size: 5, desc: 'Silver country. The hills are alive with prospectors and the men who rob them.' },
+    { name: 'Santa Cruz',     x: 220, y: 184, type: 'town', size: 4, desc: 'A Mexican village on the river. The church bell rings for vespers.' },
+    { name: 'Magdalena',      x: 200, y: 208, type: 'town', size: 5, desc: 'The fiesta of San Francisco. Pilgrims walk the dusty road from the south.' },
+    { name: 'Arizpe',         x: 300, y: 224, type: 'town', size: 5, desc: 'The old Sonoran capital. Apache scalps hang drying in the plaza.' },
+    { name: 'Hermosillo',     x: 152, y: 240, type: 'town', size: 6, desc: 'A city of churches and trade. The end of the long road south.' },
+    { name: 'Ft. Crittenden', x: 208, y: 136, type: 'fort', size: 3, desc: 'Abandoned and reoccupied. The flagpole stands crooked against the sky.' },
+    { name: 'Dragoon Springs', x: 368, y: 120, type: 'camp', size: 2, desc: 'A stage station in the shadow of the Dragoons. Water here, and danger.' },
+    { name: 'Apache Pass',     x: 432, y: 104, type: 'camp', size: 2, desc: 'The spring in the pass. Bones of men and animals mark the approach.' },
+    { name: 'Hueco Tanks',    x: 500, y: 60,  type: 'tanks', size: 4, desc: 'Ancient rock basins that hold rainwater in the desert. Petroglyphs cover the boulders. Men have killed each other here for water since before memory.' },
 ];
 
-// ---- RIVERS (scaled 2x with more waypoints for length) ----
+// ---- RIVERS (scaled 4x with more waypoints for length) ----
 const RIVERS = [
-    { name: 'Santa Cruz River', points: [[116,130],[115,120],[114,110],[112,100],[111,92],[110,85],[111,78],[112,70],[113,62],[114,55],[116,48],[118,40],[120,34],[122,28],[124,22],[125,16],[126,10]] },
-    { name: 'San Pedro River',  points: [[178,130],[177,120],[176,112],[175,104],[174,96],[174,88],[173,80],[172,72],[171,64],[170,56],[169,48],[168,40],[167,32],[166,24],[165,16]] },
+    { name: 'Santa Cruz River', points: [[232,260],[230,240],[228,220],[224,200],[222,184],[220,170],[222,156],[224,140],[226,124],[228,110],[232,96],[236,80],[240,68],[244,56],[248,44],[250,32],[252,20]] },
+    { name: 'San Pedro River',  points: [[356,260],[354,240],[352,224],[350,208],[348,192],[348,176],[346,160],[344,144],[342,128],[340,112],[338,96],[336,80],[334,64],[332,48],[330,32]] },
 ];
 
 // ---- CONTRACTS ----
@@ -157,6 +158,8 @@ const CONTRACTS = [
     { origin: 'Ft. Buchanan', dest: 'Ft. Crittenden', cargo: 'Garrison supplies', mulesNeeded: 2, pay: 25, danger: 2, desc: 'Short haul between forts. The mountains between them are not short.' },
     { origin: 'Dragoon Springs', dest: 'Tombstone', cargo: 'Mail & parcels', mulesNeeded: 1, pay: 15, danger: 2, desc: 'Stage mail that missed the coach. Quick work if you survive it.' },
     { origin: 'Arizpe', dest: 'Hermosillo', cargo: 'Apache scalps', mulesNeeded: 2, pay: 80, danger: 3, desc: 'The bounty. One hundred dollars a scalp. The Judge himself set the price.' },
+    { origin: 'Ft. Bowie', dest: 'Hueco Tanks', cargo: 'Survey equipment', mulesNeeded: 3, pay: 70, danger: 4, desc: 'The army wants the tanks mapped. The desert between here and there is merciless.' },
+    { origin: 'Hueco Tanks', dest: 'Tombstone', cargo: 'Turquoise & relics', mulesNeeded: 2, pay: 55, danger: 3, desc: 'Ancient stones pried from the rock basins. Collectors in Tombstone pay well.' },
 ];
 
 // ---- ITEMS ----
@@ -252,6 +255,13 @@ const SHOP_ITEMS = {
         { item: 'WATER_SKIN', price: 5 },
         { item: 'BANDAGE', price: 7 },
         { item: 'TOBACCO', price: 4 },
+    ],
+    tanks: [
+        { item: 'JERKY', price: 3 },
+        { item: 'WATER_SKIN', price: 4 },
+        { item: 'BANDAGE', price: 6 },
+        { item: 'TOBACCO', price: 4 },
+        { item: 'TURQUOISE', price: 8 },
     ],
 };
 

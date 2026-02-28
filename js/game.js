@@ -196,7 +196,7 @@ class Game {
 
         // Place player near Tucson - outside the town walls
         const tucson = LOCATIONS.find(l => l.name === 'Tucson');
-        const startX = tucson.x + 10;
+        const startX = tucson.x + 14;
         const startY = tucson.y;
         let px = startX, py = startY;
         for (let r = 0; r < 15; r++) {
@@ -300,7 +300,7 @@ class Game {
 
     _spawnEntities() {
         const rng = ROT.RNG;
-        const numEntities = 160 + Math.floor(rng.getUniform() * 80);
+        const numEntities = 500 + Math.floor(rng.getUniform() * 200);
 
         for (let i = 0; i < numEntities; i++) {
             const x = Math.floor(rng.getUniform() * this.map.width);
@@ -331,27 +331,27 @@ class Game {
     _spawnSpecialCharacters() {
         const rng = ROT.RNG;
 
-        // Judge Holden
-        const judgeX = 150 + Math.floor(rng.getUniform() * 40);
-        const judgeY = 40 + Math.floor(rng.getUniform() * 30);
+        // Judge Holden - near Hueco Tanks area
+        const judgeX = 300 + Math.floor(rng.getUniform() * 80);
+        const judgeY = 80 + Math.floor(rng.getUniform() * 60);
         if (this.map.isWalkable(judgeX, judgeY)) {
             const judge = new Entity('JUDGE_HOLDEN', judgeX, judgeY);
             this.entities.push(judge);
             this.map.addEntity(judge);
         }
 
-        // The Kid
-        const kidX = 130 + Math.floor(rng.getUniform() * 10);
-        const kidY = 34 + Math.floor(rng.getUniform() * 8);
+        // The Kid - near Tucson
+        const kidX = 260 + Math.floor(rng.getUniform() * 20);
+        const kidY = 68 + Math.floor(rng.getUniform() * 16);
         if (this.map.isWalkable(kidX, kidY)) {
             const kid = new Entity('THE_KID', kidX, kidY);
             this.entities.push(kid);
             this.map.addEntity(kid);
         }
 
-        // Tobin
-        const tobinX = 120 + Math.floor(rng.getUniform() * 8);
-        const tobinY = 32 + Math.floor(rng.getUniform() * 6);
+        // Tobin - near Tucson
+        const tobinX = 240 + Math.floor(rng.getUniform() * 16);
+        const tobinY = 64 + Math.floor(rng.getUniform() * 12);
         if (this.map.isWalkable(tobinX, tobinY)) {
             const tobin = new Entity('TOBIN', tobinX, tobinY);
             this.entities.push(tobin);
@@ -359,8 +359,8 @@ class Game {
         }
 
         // Toadvine
-        const tvX = 140 + Math.floor(rng.getUniform() * 40);
-        const tvY = 50 + Math.floor(rng.getUniform() * 20);
+        const tvX = 280 + Math.floor(rng.getUniform() * 80);
+        const tvY = 100 + Math.floor(rng.getUniform() * 40);
         if (this.map.isWalkable(tvX, tvY)) {
             const tv = new Entity('TOADVINE', tvX, tvY);
             this.entities.push(tv);
@@ -368,8 +368,8 @@ class Game {
         }
 
         // Glanton + gang
-        const gX = 120 + Math.floor(rng.getUniform() * 40);
-        const gY = 80 + Math.floor(rng.getUniform() * 20);
+        const gX = 240 + Math.floor(rng.getUniform() * 80);
+        const gY = 160 + Math.floor(rng.getUniform() * 40);
         if (this.map.isWalkable(gX, gY)) {
             const glanton = new Entity('GLANTON', gX, gY);
             this.entities.push(glanton);
@@ -386,8 +386,8 @@ class Game {
         }
 
         // Bathcat
-        const bcX = 110 + Math.floor(rng.getUniform() * 20);
-        const bcY = 55 + Math.floor(rng.getUniform() * 10);
+        const bcX = 220 + Math.floor(rng.getUniform() * 40);
+        const bcY = 110 + Math.floor(rng.getUniform() * 20);
         if (this.map.isWalkable(bcX, bcY)) {
             const bc = new Entity('BATHCAT', bcX, bcY);
             this.entities.push(bc);
@@ -395,12 +395,41 @@ class Game {
         }
 
         // Black Jackson
-        const bjX = 160 + Math.floor(rng.getUniform() * 30);
-        const bjY = 60 + Math.floor(rng.getUniform() * 20);
+        const bjX = 320 + Math.floor(rng.getUniform() * 60);
+        const bjY = 120 + Math.floor(rng.getUniform() * 40);
         if (this.map.isWalkable(bjX, bjY)) {
             const bj = new Entity('BLACK_JACKSON', bjX, bjY);
             this.entities.push(bj);
             this.map.addEntity(bj);
+        }
+
+        // NPCs near Hueco Tanks
+        const huecoTanks = LOCATIONS.find(l => l.name === 'Hueco Tanks');
+        if (huecoTanks) {
+            // A second Judge sighting near the tanks
+            const hjX = huecoTanks.x + Math.floor(rng.getUniform() * 16) - 8;
+            const hjY = huecoTanks.y + Math.floor(rng.getUniform() * 16) - 8;
+            if (this.map.isWalkable(hjX, hjY)) {
+                const hj = new Entity('JUDGE_HOLDEN', hjX, hjY);
+                this.entities.push(hj);
+                this.map.addEntity(hj);
+            }
+            // Tobin near the tanks
+            const htX = huecoTanks.x + Math.floor(rng.getUniform() * 12) - 6;
+            const htY = huecoTanks.y + Math.floor(rng.getUniform() * 12) - 6;
+            if (this.map.isWalkable(htX, htY)) {
+                const ht = new Entity('TOBIN', htX, htY);
+                this.entities.push(ht);
+                this.map.addEntity(ht);
+            }
+            // Toadvine near the tanks
+            const hvX = huecoTanks.x + Math.floor(rng.getUniform() * 12) - 6;
+            const hvY = huecoTanks.y + Math.floor(rng.getUniform() * 12) - 6;
+            if (this.map.isWalkable(hvX, hvY)) {
+                const hv = new Entity('TOADVINE', hvX, hvY);
+                this.entities.push(hv);
+                this.map.addEntity(hv);
+            }
         }
     }
 
@@ -772,13 +801,17 @@ class Game {
         // Check for location entry
         const loc = this.map.getNearbyLocation(nx, ny, 3);
         const tileType = this.map.getTileType(nx, ny);
-        if (loc && (tileType === 'TOWN_DOOR' || tileType === 'TOWN_FLOOR' || tileType === 'CAMPFIRE')) {
+        if (loc && tileType === 'CAMPFIRE') {
             // Remove dead mules when arriving in town
             const removed = this.player.removeDeadMules();
             if (removed > 0) {
                 this.ui.addMessage(`The town undertaker hauls away ${removed} dead mule${removed > 1 ? 's' : ''} from your train.`, 'system');
             }
             this.ui.showTownScreen(loc, this);
+        } else if (loc && tileType === 'TOWN_DOOR') {
+            this.ui.addMessage(`You enter ${loc.name}. Find the campfire at the center to access town services.`, 'info');
+        } else if (loc && tileType === 'TOWN_FLOOR') {
+            this.ui.addMessage(`${loc.name}`, 'system');
         }
 
         return true;
@@ -958,7 +991,7 @@ class Game {
             this.ui.hideInventoryScreen();
             const loc = this.map.getNearbyLocation(this.player.x, this.player.y, 8);
             const tileType = this.map.getTileType(this.player.x, this.player.y);
-            if (loc && (tileType === 'TOWN_DOOR' || tileType === 'TOWN_FLOOR' || tileType === 'CAMPFIRE')) {
+            if (loc && tileType === 'CAMPFIRE') {
                 this.ui.showTownScreen(loc, this);
             } else {
                 this.state = 'explore';
@@ -1668,7 +1701,7 @@ class Game {
 
     _respawnEntities() {
         const rng = ROT.RNG;
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 16; i++) {
             const x = Math.floor(rng.getUniform() * this.map.width);
             const y = Math.floor(rng.getUniform() * this.map.height);
             const dist = Math.abs(x - this.player.x) + Math.abs(y - this.player.y);

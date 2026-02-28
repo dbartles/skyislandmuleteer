@@ -265,11 +265,42 @@ body {
 }
 
 /* Help screen */
+.help-content {
+    max-width: 780px;
+    text-align: left;
+}
+
+.help-section {
+    margin: 14px 0;
+}
+
+.help-section h3 {
+    color: #DAA520;
+    margin: 0 0 6px 0;
+    font-size: 13px;
+}
+
+.help-section p {
+    color: #C4A882;
+    font-size: 12px;
+    margin: 3px 0;
+    line-height: 1.5;
+}
+
+.help-section em {
+    color: #8B7355;
+}
+
+.help-glyph {
+    color: #DAA520;
+    font-weight: bold;
+}
+
 .help-columns {
     display: flex;
     gap: 30px;
     text-align: left;
-    margin: 20px 0;
+    margin: 14px 0;
 }
 
 .help-col {
@@ -280,6 +311,10 @@ body {
     color: #DAA520;
     margin: 12px 0 6px 0;
     font-size: 13px;
+}
+
+.help-col h3:first-child {
+    margin-top: 0;
 }
 
 .help-col p {

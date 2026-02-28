@@ -95,7 +95,7 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
 
     // Test 13: Map size
     const mapSize = await page.evaluate(() => ({ w: window.game.map.width, h: window.game.map.height }));
-    console.log(`[${mapSize.w === 280 && mapSize.h === 140 ? 'PASS' : 'FAIL'}] Map size (${mapSize.w}x${mapSize.h})`);
+    console.log(`[${mapSize.w === 560 && mapSize.h === 280 ? 'PASS' : 'FAIL'}] Map size (${mapSize.w}x${mapSize.h})`);
 
     // Test 14: Entity count
     const entCount = await page.evaluate(() => window.game.entities.length);
