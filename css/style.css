@@ -1,0 +1,421 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0d0a04;
+    color: #D2B48C;
+    font-family: 'Courier New', 'Lucida Console', monospace;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 1100px;
+    width: 100%;
+    height: 100vh;
+    max-height: 800px;
+}
+
+#top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 12px;
+    background: #1a1206;
+    border-bottom: 1px solid #3d2b1a;
+    font-size: 13px;
+    min-height: 28px;
+}
+
+#game-title {
+    color: #DAA520;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+#turn-counter {
+    color: #8B7355;
+}
+
+#location-name {
+    color: #CD853F;
+    font-style: italic;
+}
+
+#main-area {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+#map-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #0d0a04;
+    border-right: 1px solid #3d2b1a;
+    overflow: hidden;
+}
+
+#map-container canvas {
+    display: block;
+}
+
+#side-panel {
+    width: 220px;
+    background: #130e06;
+    padding: 8px;
+    overflow-y: auto;
+    font-size: 12px;
+}
+
+#side-panel h3 {
+    color: #DAA520;
+    font-size: 11px;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #3d2b1a;
+    padding-bottom: 3px;
+    margin-bottom: 6px;
+    margin-top: 10px;
+}
+
+#side-panel h3:first-child {
+    margin-top: 0;
+}
+
+#hp-bar {
+    margin-bottom: 6px;
+}
+
+.hp-bar-outer {
+    background: #2a1f0f;
+    border: 1px solid #3d2b1a;
+    height: 14px;
+    width: 100%;
+    position: relative;
+}
+
+.hp-bar-inner {
+    background: #8B4513;
+    height: 100%;
+    transition: width 0.3s;
+}
+
+.hp-bar-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10px;
+    line-height: 14px;
+    color: #DEB887;
+}
+
+.stat-line {
+    color: #C4A882;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    color: #DEB887;
+    float: right;
+}
+
+.mule-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid #1a1206;
+}
+
+.mule-name {
+    color: #A0522D;
+}
+
+.mule-thirst {
+    float: right;
+    font-size: 10px;
+}
+
+.thirst-ok { color: #4682B4; }
+.thirst-low { color: #DAA520; }
+.thirst-critical { color: #CD5C5C; }
+
+.cargo-entry {
+    color: #BDB76B;
+    padding: 1px 0;
+}
+
+#contract-detail {
+    color: #8B7355;
+    font-size: 11px;
+}
+
+.contract-active {
+    color: #DAA520;
+}
+
+#message-log {
+    height: 120px;
+    background: #0d0a04;
+    border-top: 1px solid #3d2b1a;
+    overflow-y: auto;
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+#messages {
+    display: flex;
+    flex-direction: column;
+}
+
+.msg {
+    padding: 1px 0;
+}
+
+.msg-combat { color: #CD5C5C; }
+.msg-danger { color: #B22222; }
+.msg-info { color: #C4A882; }
+.msg-water { color: #4682B4; }
+.msg-gold { color: #DAA520; }
+.msg-quote { color: #8B7355; font-style: italic; }
+.msg-system { color: #696969; }
+.msg-good { color: #6B8E23; }
+
+#bottom-bar {
+    padding: 4px 12px;
+    background: #1a1206;
+    border-top: 1px solid #3d2b1a;
+    font-size: 11px;
+    color: #696969;
+    text-align: center;
+    min-height: 24px;
+}
+
+/* Overlays */
+.overlay, #title-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(13, 10, 4, 0.92);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.overlay-content, #title-content {
+    max-width: 650px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 30px;
+    text-align: center;
+}
+
+#title-art {
+    color: #DAA520;
+    font-size: 10px;
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+.quote {
+    color: #8B7355;
+    font-style: italic;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.attribution {
+    color: #696969;
+    font-size: 12px;
+}
+
+.prompt {
+    color: #DAA520;
+    font-size: 14px;
+    margin-top: 15px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.prompt-small {
+    color: #696969;
+    font-size: 11px;
+    margin-top: 8px;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* Help screen */
+.help-columns {
+    display: flex;
+    gap: 30px;
+    text-align: left;
+    margin: 20px 0;
+}
+
+.help-col {
+    flex: 1;
+}
+
+.help-col h3 {
+    color: #DAA520;
+    margin: 12px 0 6px 0;
+    font-size: 13px;
+}
+
+.help-col p {
+    color: #C4A882;
+    font-size: 12px;
+    margin: 3px 0;
+}
+
+/* Town screen */
+#town-desc {
+    color: #8B7355;
+    font-style: italic;
+    margin: 10px 0 20px 0;
+}
+
+.town-option {
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: #1a1206;
+    border: 1px solid #3d2b1a;
+    color: #DEB887;
+    cursor: pointer;
+    text-align: left;
+}
+
+.town-option:hover {
+    border-color: #DAA520;
+    color: #DAA520;
+}
+
+.town-option .key {
+    color: #DAA520;
+    font-weight: bold;
+}
+
+.town-feedback {
+    color: #C4A882;
+    font-size: 13px;
+    margin-top: 12px;
+    min-height: 18px;
+}
+
+/* Contract list */
+.contract-entry {
+    padding: 10px;
+    margin: 6px 0;
+    background: #1a1206;
+    border: 1px solid #3d2b1a;
+    text-align: left;
+    cursor: pointer;
+}
+
+.contract-entry:hover {
+    border-color: #DAA520;
+}
+
+.contract-cargo {
+    color: #DEB887;
+    font-size: 14px;
+}
+
+.contract-route {
+    color: #8B7355;
+    font-size: 12px;
+}
+
+.contract-pay {
+    color: #DAA520;
+    font-size: 13px;
+    float: right;
+}
+
+.contract-danger {
+    color: #CD5C5C;
+    font-size: 11px;
+}
+
+/* Inventory screen */
+.inv-item {
+    padding: 4px 8px;
+    margin: 3px 0;
+    background: #1a1206;
+    border: 1px solid #2a1e10;
+    text-align: left;
+    font-size: 12px;
+}
+
+.inv-feedback {
+    color: #C4A882;
+    font-size: 13px;
+    margin-top: 10px;
+    min-height: 18px;
+}
+
+/* Shop screen */
+.shop-item {
+    padding: 6px 10px;
+    margin: 3px 0;
+    background: #1a1206;
+    border: 1px solid #2a1e10;
+    text-align: left;
+    font-size: 12px;
+}
+
+.shop-item:hover {
+    border-color: #DAA520;
+}
+
+.shop-feedback {
+    color: #C4A882;
+    font-size: 13px;
+    margin-top: 10px;
+    min-height: 18px;
+}
+
+/* Death screen */
+.death h2 {
+    color: #B22222;
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+#death-stats {
+    color: #8B7355;
+    font-size: 13px;
+    text-align: left;
+    display: inline-block;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0d0a04;
+}
+::-webkit-scrollbar-thumb {
+    background: #3d2b1a;
+}

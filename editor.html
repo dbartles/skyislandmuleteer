@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sky Island Muleteer - Map Editor</title>
+    <script src="https://cdn.jsdelivr.net/npm/rot-js@2/dist/rot.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0d0a04;
+            color: #D2B48C;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            height: 100vh;
+        }
+        #editor-sidebar {
+            width: 260px;
+            background: #130e06;
+            padding: 10px;
+            overflow-y: auto;
+            border-right: 1px solid #3d2b1a;
+            font-size: 12px;
+        }
+        #editor-sidebar h2 {
+            color: #DAA520;
+            font-size: 14px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        #editor-sidebar h3 {
+            color: #CD853F;
+            font-size: 11px;
+            margin: 10px 0 4px 0;
+            border-bottom: 1px solid #3d2b1a;
+            padding-bottom: 2px;
+        }
+        .tool-btn {
+            display: inline-block;
+            padding: 3px 6px;
+            margin: 2px;
+            background: #1a1206;
+            border: 1px solid #3d2b1a;
+            color: #DEB887;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+        }
+        .tool-btn:hover, .tool-btn.active {
+            border-color: #DAA520;
+            color: #DAA520;
+        }
+        .tool-btn .preview {
+            display: inline-block;
+            width: 14px;
+            text-align: center;
+            font-weight: bold;
+        }
+        #editor-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #editor-topbar {
+            padding: 6px 12px;
+            background: #1a1206;
+            border-bottom: 1px solid #3d2b1a;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 12px;
+        }
+        #editor-topbar button {
+            padding: 4px 12px;
+            background: #2a1e10;
+            border: 1px solid #3d2b1a;
+            color: #DAA520;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+        #editor-topbar button:hover {
+            background: #3d2b1a;
+        }
+        #editor-canvas-wrap {
+            flex: 1;
+            overflow: auto;
+            background: #0d0a04;
+        }
+        #cursor-info {
+            color: #8B7355;
+        }
+        #editor-status {
+            padding: 4px 12px;
+            background: #1a1206;
+            border-top: 1px solid #3d2b1a;
+            font-size: 11px;
+            color: #696969;
+        }
+        .entity-btn {
+            display: block;
+            padding: 3px 6px;
+            margin: 2px 0;
+            background: #1a1206;
+            border: 1px solid #3d2b1a;
+            color: #DEB887;
+            cursor: pointer;
+            font-size: 11px;
+            width: 100%;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+        }
+        .entity-btn:hover, .entity-btn.active {
+            border-color: #DAA520;
+            color: #DAA520;
+        }
+        #export-area {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #130e06;
+            border: 2px solid #DAA520;
+            padding: 20px;
+            z-index: 200;
+            max-width: 600px;
+            max-height: 80vh;
+        }
+        #export-area textarea {
+            width: 100%;
+            height: 300px;
+            background: #0d0a04;
+            color: #DEB887;
+            border: 1px solid #3d2b1a;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            padding: 8px;
+        }
+        #export-area button {
+            margin-top: 8px;
+            padding: 6px 16px;
+            background: #2a1e10;
+            border: 1px solid #DAA520;
+            color: #DAA520;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="editor-sidebar">
+        <h2>MAP EDITOR</h2>
+        <div>
+            <label style="color:#8B7355">Brush: </label>
+            <select id="brush-mode" style="background:#1a1206;color:#DEB887;border:1px solid #3d2b1a;font-family:monospace;font-size:11px">
+                <option value="paint">Paint Terrain</option>
+                <option value="entity">Place Entity</option>
+                <option value="erase">Erase Entity</option>
+            </select>
+        </div>
+        <div>
+            <label style="color:#8B7355">Size: </label>
+            <select id="brush-size" style="background:#1a1206;color:#DEB887;border:1px solid #3d2b1a;font-family:monospace;font-size:11px">
+                <option value="1">1x1</option>
+                <option value="3">3x3</option>
+                <option value="5">5x5</option>
+                <option value="9">9x9</option>
+            </select>
+        </div>
+
+        <h3>TERRAIN</h3>
+        <div id="terrain-palette"></div>
+
+        <h3>ENTITIES</h3>
+        <div id="entity-palette"></div>
+
+        <h3>LOCATIONS</h3>
+        <div id="location-list"></div>
+    </div>
+
+    <div id="editor-main">
+        <div id="editor-topbar">
+            <button onclick="editorNewMap()">New Map</button>
+            <button onclick="editorGenerate()">Regenerate</button>
+            <button onclick="editorExport()">Export JSON</button>
+            <button onclick="editorImport()">Import JSON</button>
+            <span id="cursor-info">x:0 y:0 | SAND</span>
+        </div>
+        <div id="editor-canvas-wrap"></div>
+        <div id="editor-status">Click to paint. Scroll to pan. Use brush mode and size controls.</div>
+    </div>
+
+    <div id="export-area">
+        <h3 style="color:#DAA520;margin-bottom:10px">MAP DATA</h3>
+        <textarea id="export-text"></textarea>
+        <button onclick="document.getElementById('export-area').style.display='none'">Close</button>
+        <button onclick="editorCopyExport()">Copy</button>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/entities.js"></script>
+    <script>
+    // ========== Editor State ==========
+    let editorMap = null;
+    let editorDisplay = null;
+    let editorEntities = [];
+    let selectedTerrain = 'SAND';
+    let selectedEntity = 'APACHE_WARRIOR';
+    let vpX = 0, vpY = 0;
+    const ED_VP_W = 80;
+    const ED_VP_H = 45;
+
+    // ========== Init ==========
+    window.addEventListener('load', () => {
+        editorDisplay = new ROT.Display({
+            width: ED_VP_W,
+            height: ED_VP_H,
+            fontSize: 14,
+            fontFamily: '"Courier New", monospace',
+            bg: '#0d0a04',
+            spacing: 1.0,
+        });
+        const canvas = editorDisplay.getContainer();
+        document.getElementById('editor-canvas-wrap').appendChild(canvas);
+
+        buildPalettes();
+        editorGenerate();
+
+        // Mouse events on canvas
+        canvas.addEventListener('mousedown', (e) => { editorPaint(e); editorDragging = true; });
+        canvas.addEventListener('mousemove', (e) => { editorHover(e); if (editorDragging) editorPaint(e); });
+        canvas.addEventListener('mouseup', () => { editorDragging = false; });
+        canvas.addEventListener('mouseleave', () => { editorDragging = false; });
+
+        // Keyboard scroll
+        document.addEventListener('keydown', (e) => {
+            const step = 5;
+            if (e.key === 'ArrowLeft') { vpX = Math.max(0, vpX - step); editorRender(); }
+            if (e.key === 'ArrowRight') { vpX = Math.min(MAP_WIDTH - ED_VP_W, vpX + step); editorRender(); }
+            if (e.key === 'ArrowUp') { vpY = Math.max(0, vpY - step); editorRender(); }
+            if (e.key === 'ArrowDown') { vpY = Math.min(MAP_HEIGHT - ED_VP_H, vpY + step); editorRender(); }
+        });
+    });
+
+    let editorDragging = false;
+
+    function buildPalettes() {
+        const tp = document.getElementById('terrain-palette');
+        const terrainKeys = Object.keys(TERRAIN);
+        terrainKeys.forEach(key => {
+            const t = TERRAIN[key];
+            const btn = document.createElement('span');
+            btn.className = 'tool-btn';
+            btn.innerHTML = `<span class="preview" style="color:${t.fg}">${t.char}</span> ${key.substring(0,8)}`;
+            btn.title = t.name;
+            btn.onclick = () => {
+                selectedTerrain = key;
+                document.getElementById('brush-mode').value = 'paint';
+                document.querySelectorAll('#terrain-palette .tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            };
+            tp.appendChild(btn);
+        });
+
+        const ep = document.getElementById('entity-palette');
+        const entityKeys = Object.keys(ENTITY_TYPES);
+        entityKeys.forEach(key => {
+            const e = ENTITY_TYPES[key];
+            const btn = document.createElement('button');
+            btn.className = 'entity-btn';
+            btn.innerHTML = `<span style="color:${e.fg}">${e.char}</span> ${e.name}`;
+            btn.onclick = () => {
+                selectedEntity = key;
+                document.getElementById('brush-mode').value = 'entity';
+                document.querySelectorAll('.entity-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            };
+            ep.appendChild(btn);
+        });
+
+        const ll = document.getElementById('location-list');
+        LOCATIONS.forEach(loc => {
+            const btn = document.createElement('button');
+            btn.className = 'entity-btn';
+            btn.textContent = `${loc.name} (${loc.x},${loc.y})`;
+            btn.onclick = () => {
+                vpX = Math.max(0, Math.min(MAP_WIDTH - ED_VP_W, loc.x - Math.floor(ED_VP_W / 2)));
+                vpY = Math.max(0, Math.min(MAP_HEIGHT - ED_VP_H, loc.y - Math.floor(ED_VP_H / 2)));
+                editorRender();
+            };
+            ll.appendChild(btn);
+        });
+    }
+
+    function getMapCoords(e) {
+        const canvas = editorDisplay.getContainer();
+        const rect = canvas.getBoundingClientRect();
+        const cellW = rect.width / ED_VP_W;
+        const cellH = rect.height / ED_VP_H;
+        const cx = Math.floor((e.clientX - rect.left) / cellW);
+        const cy = Math.floor((e.clientY - rect.top) / cellH);
+        return [vpX + cx, vpY + cy];
+    }
+
+    function editorHover(e) {
+        const [mx, my] = getMapCoords(e);
+        if (mx < 0 || mx >= MAP_WIDTH || my < 0 || my >= MAP_HEIGHT) return;
+        const tile = editorMap ? editorMap.tiles[my][mx] : 'SAND';
+        const ents = editorEntities.filter(en => en.x === mx && en.y === my);
+        const entStr = ents.length > 0 ? ' | ' + ents.map(en => en.name).join(', ') : '';
+        document.getElementById('cursor-info').textContent = `x:${mx} y:${my} | ${tile}${entStr}`;
+    }
+
+    function editorPaint(e) {
+        const [mx, my] = getMapCoords(e);
+        const mode = document.getElementById('brush-mode').value;
+        const size = parseInt(document.getElementById('brush-size').value);
+        const half = Math.floor(size / 2);
+
+        if (mode === 'paint') {
+            for (let dy = -half; dy <= half; dy++) {
+                for (let dx = -half; dx <= half; dx++) {
+                    const nx = mx + dx, ny = my + dy;
+                    if (nx >= 0 && nx < MAP_WIDTH && ny >= 0 && ny < MAP_HEIGHT) {
+                        editorMap.tiles[ny][nx] = selectedTerrain;
+                    }
+                }
+            }
+        } else if (mode === 'entity') {
+            // Don't duplicate if already exists
+            const exists = editorEntities.find(en => en.x === mx && en.y === my && en.type === selectedEntity);
+            if (!exists) {
+                const ent = new Entity(selectedEntity, mx, my);
+                editorEntities.push(ent);
+            }
+        } else if (mode === 'erase') {
+            editorEntities = editorEntities.filter(en => {
+                const dist = Math.abs(en.x - mx) + Math.abs(en.y - my);
+                return dist > half;
+            });
+        }
+
+        editorRender();
+    }
+
+    function editorNewMap() {
+        editorMap = new GameMap(MAP_WIDTH, MAP_HEIGHT);
+        // Initialize blank
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            editorMap.tiles[y] = [];
+            editorMap.explored[y] = [];
+            editorMap.visible[y] = [];
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                editorMap.tiles[y][x] = 'SAND';
+                editorMap.explored[y][x] = true;
+                editorMap.visible[y][x] = true;
+            }
+        }
+        editorEntities = [];
+        vpX = 0; vpY = 0;
+        editorRender();
+    }
+
+    function editorGenerate() {
+        editorMap = new GameMap(MAP_WIDTH, MAP_HEIGHT);
+        editorMap.init();
+        // Mark all explored for editor
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                editorMap.explored[y][x] = true;
+                editorMap.visible[y][x] = true;
+            }
+        }
+        editorEntities = [];
+        vpX = 60; vpY = 10;
+        editorRender();
+    }
+
+    function editorRender() {
+        if (!editorDisplay || !editorMap) return;
+        editorDisplay.clear();
+
+        for (let vy = 0; vy < ED_VP_H; vy++) {
+            for (let vx = 0; vx < ED_VP_W; vx++) {
+                const mx = vpX + vx;
+                const my = vpY + vy;
+                if (mx >= MAP_WIDTH || my >= MAP_HEIGHT) continue;
+                const tile = TERRAIN[editorMap.tiles[my][mx]] || TERRAIN.SAND;
+                editorDisplay.draw(vx, vy, tile.char, tile.fg, tile.bg);
+            }
+        }
+
+        // Draw entities
+        for (const ent of editorEntities) {
+            const ex = ent.x - vpX;
+            const ey = ent.y - vpY;
+            if (ex >= 0 && ex < ED_VP_W && ey >= 0 && ey < ED_VP_H) {
+                editorDisplay.draw(ex, ey, ent.char, ent.fg, '#0d0a04');
+            }
+        }
+
+        // Draw location labels
+        for (const loc of LOCATIONS) {
+            const lx = loc.x - vpX;
+            const ly = loc.y - vpY - 2;
+            if (lx < 0 || lx >= ED_VP_W - 4 || ly < 0 || ly >= ED_VP_H) continue;
+            for (let ci = 0; ci < loc.name.length && lx + ci < ED_VP_W; ci++) {
+                editorDisplay.draw(lx + ci, ly, loc.name[ci], '#DAA520', '#0d0a04');
+            }
+        }
+    }
+
+    function editorExport() {
+        const data = {
+            width: MAP_WIDTH,
+            height: MAP_HEIGHT,
+            tiles: editorMap.tiles,
+            entities: editorEntities.map(e => ({ type: e.type, x: e.x, y: e.y })),
+        };
+        document.getElementById('export-text').value = JSON.stringify(data);
+        document.getElementById('export-area').style.display = 'block';
+    }
+
+    function editorImport() {
+        const text = prompt('Paste JSON map data:');
+        if (!text) return;
+        try {
+            const data = JSON.parse(text);
+            editorMap = new GameMap(data.width, data.height);
+            for (let y = 0; y < data.height; y++) {
+                editorMap.tiles[y] = data.tiles[y] || [];
+                editorMap.explored[y] = [];
+                editorMap.visible[y] = [];
+                for (let x = 0; x < data.width; x++) {
+                    editorMap.explored[y][x] = true;
+                    editorMap.visible[y][x] = true;
+                }
+            }
+            editorEntities = (data.entities || []).map(e => new Entity(e.type, e.x, e.y));
+            editorRender();
+        } catch (err) {
+            alert('Failed to import: ' + err.message);
+        }
+    }
+
+    function editorCopyExport() {
+        const ta = document.getElementById('export-text');
+        ta.select();
+        document.execCommand('copy');
+    }
+    </script>
+</body>
+</html>

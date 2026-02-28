@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sky Island Muleteer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/rot-js@2/dist/rot.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <div id="top-bar">
+            <span id="game-title">SKY ISLAND MULETEER</span>
+            <span id="turn-counter">Turn: 0</span>
+            <span id="location-name">The Sonoran Desert</span>
+        </div>
+        <div id="main-area">
+            <div id="map-container">
+                <!-- rot.js canvas inserted here -->
+            </div>
+            <div id="side-panel">
+                <div id="player-stats">
+                    <h3>MULETEER</h3>
+                    <div id="hp-bar"></div>
+                    <div id="stats-detail"></div>
+                </div>
+                <div id="mule-status">
+                    <h3>MULE TRAIN</h3>
+                    <div id="mule-list"></div>
+                </div>
+                <div id="cargo-status">
+                    <h3>CARGO</h3>
+                    <div id="cargo-list"></div>
+                </div>
+                <div id="contract-status">
+                    <h3>CONTRACT</h3>
+                    <div id="contract-detail"></div>
+                </div>
+            </div>
+        </div>
+        <div id="message-log">
+            <div id="messages"></div>
+        </div>
+        <div id="bottom-bar">
+            <span>WASD/Arrows: Move | SPACE: Wait | I: Inventory | C: Contracts | L: Look | T: Throw | M: Mine | ?: Help</span>
+        </div>
+    </div>
+
+    <!-- Title Screen Overlay -->
+    <div id="title-screen">
+        <div id="title-content">
+            <pre id="title-art">
+   _____ _            _____     _                 _
+  / ____| |          |_   _|   | |               | |
+ | (___ | | ___   _    | |  ___| | __ _ _ __   __| |
+  \___ \| |/ / | | |   | | / __| |/ _` | '_ \ / _` |
+  ____) |   <| |_| |  _| |_\__ \ | (_| | | | | (_| |
+ |_____/|_|\_\\__, | |_____|___/_|\__,_|_| |_|\__,_|
+               __/ |
+              |___/
+__  __       _      _
+|  \/  |     | |    | |
+               | \  / |_   _| | ___| |_ ___  ___ _ __
+                | |\/| | | | | |/ _ \ __/ _ \/ _ \ '__|
+             | |  | | |_| | |  __/ ||  __/  __/ |
+             |_|  |_|\__,_|_|\___|\\__\\___|\___|_|
+            </pre>
+            <p class="quote">"Whatever in creation exists without my knowledge exists without my consent."</p>
+            <p class="attribution">- Judge Holden</p>
+            <br>
+            <p class="prompt">Press ENTER to begin your journey</p>
+            <p class="prompt-small">Press H for help</p>
+        </div>
+    </div>
+
+    <!-- Help Overlay -->
+    <div id="help-screen" class="overlay hidden">
+        <div class="overlay-content">
+            <h2>HOW TO SURVIVE</h2>
+            <div class="help-columns">
+                <div class="help-col">
+                    <h3>Movement</h3>
+                    <p>WASD / Arrow Keys - Move</p>
+                    <p>SPACE - Wait a turn</p>
+                    <p>. - Also wait</p>
+                    <h3>Actions</h3>
+                    <p>Bump into enemies to attack</p>
+                    <p>Walk into towns to enter</p>
+                    <p>Stand on water to drink</p>
+                    <p>L + direction - Look</p>
+                    <p>T + direction - Throw item</p>
+                    <p>M - Mine ore vein</p>
+                </div>
+                <div class="help-col">
+                    <h3>Menus</h3>
+                    <p>C - Contract board</p>
+                    <p>I - Inventory (equip/use/sell)</p>
+                    <p>S - Shop (in town)</p>
+                    <p>? - This help screen</p>
+                    <p>ESC - Close menu</p>
+                    <h3>Inventory Keys</h3>
+                    <p>E + number - Equip item</p>
+                    <p>U + number - Use item</p>
+                    <p>Number - Sell item (in town)</p>
+                    <h3>Survival</h3>
+                    <p>Keep mules watered at cenotes/creeks</p>
+                    <p>Cactus hurts - avoid cholla</p>
+                    <p>Canyons are dangerous - ambush risk</p>
+                    <p>Mine ore veins for gold & silver</p>
+                </div>
+            </div>
+            <p class="prompt">Press ESC to close</p>
+        </div>
+    </div>
+
+    <!-- Town Overlay -->
+    <div id="town-screen" class="overlay hidden">
+        <div class="overlay-content">
+            <h2 id="town-name"></h2>
+            <p id="town-desc"></p>
+            <div id="town-options"></div>
+            <p id="town-feedback" class="town-feedback"></p>
+            <p class="prompt">Press ESC to leave town</p>
+        </div>
+    </div>
+
+    <!-- Contract Overlay -->
+    <div id="contract-screen" class="overlay hidden">
+        <div class="overlay-content">
+            <h2>CONTRACT BOARD</h2>
+            <div id="contract-list"></div>
+            <p class="prompt">Press number to accept, ESC to close</p>
+        </div>
+    </div>
+
+    <!-- Inventory Overlay -->
+    <div id="inventory-screen" class="overlay hidden">
+        <div class="overlay-content">
+            <h2>INVENTORY</h2>
+            <div id="inventory-list"></div>
+            <p id="inventory-feedback" class="inv-feedback"></p>
+            <p class="prompt">E+# equip | U+# use | # sell (town) | ESC close</p>
+        </div>
+    </div>
+
+    <!-- Shop Overlay -->
+    <div id="shop-screen" class="overlay hidden">
+        <div class="overlay-content">
+            <h2>GENERAL STORE</h2>
+            <p id="shop-gold" style="color:#DAA520"></p>
+            <div id="shop-list"></div>
+            <p id="shop-feedback" class="shop-feedback"></p>
+            <p class="prompt">Press number to buy, ESC to close</p>
+        </div>
+    </div>
+
+    <!-- Death Screen Overlay -->
+    <div id="death-screen" class="overlay hidden">
+        <div class="overlay-content death">
+            <h2>YOU HAVE PERISHED</h2>
+            <p id="death-quote" class="quote"></p>
+            <p id="death-attribution" class="attribution"></p>
+            <br>
+            <div id="death-stats"></div>
+            <br>
+            <p class="prompt">Press ENTER to try again</p>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/entities.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
