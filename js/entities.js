@@ -55,7 +55,7 @@ class Entity {
 
     _judgeAI(game) {
         const dist = Math.abs(this.x - game.player.x) + Math.abs(this.y - game.player.y);
-        if (dist <= 3 && ROT.RNG.getUniform() < 0.3) {
+        if (dist <= 3 && ROT.RNG.getUniform() < 0.06) {
             const q = QUOTES.judge[Math.floor(ROT.RNG.getUniform() * QUOTES.judge.length)];
             game.ui.addMessage(`The Judge speaks: "${q.text}"`, 'quote');
         }
@@ -159,12 +159,22 @@ class Player {
     }
 
     addMule() {
-        if (this.mules.length >= MAX_MULES) return false;
+        const aliveMules = this.mules.filter(m => m.alive).length;
+        if (aliveMules >= MAX_MULES) return false;
         const nameIdx = this.mules.length % MULE_NAMES.length;
         const mule = new Mule(MULE_NAMES[nameIdx]);
         mule.x = this.x; mule.y = this.y;
         this.mules.push(mule);
         return true;
+    }
+
+    removeDeadMules() {
+        const dead = this.mules.filter(m => !m.alive);
+        if (dead.length > 0) {
+            this.mules = this.mules.filter(m => m.alive);
+            return dead.length;
+        }
+        return 0;
     }
 
     moveMules(oldX, oldY) {

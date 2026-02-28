@@ -49,6 +49,11 @@ const TERRAIN = {
     RUINS:          { char: '%', fg: '#7A6A5A', bg: '#181510', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 1, name: 'Ruins' },
     BONES:          { char: '%', fg: '#E8E0D0', bg: '#1a1206', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 1, name: 'Bleached bones' },
     ORE_VEIN:       { char: '&', fg: '#C0A030', bg: '#181510', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 1, name: 'Ore vein', mineable: true },
+    MINE_ENTRANCE:  { char: '>', fg: '#DAA520', bg: '#181510', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 0, name: 'Mine entrance' },
+    MINE_FLOOR:     { char: '.', fg: '#706860', bg: '#0e0c08', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 0, name: 'Mine tunnel' },
+    MINE_WALL:      { char: '#', fg: '#504840', bg: '#0a0806', walkable: false, seeThrough: false, damage: 0, thirstCost: 0, name: 'Mine wall' },
+    MINE_ORE:       { char: '&', fg: '#E0C040', bg: '#0e0c08', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 0, name: 'Rich ore vein', mineable: true },
+    MINE_SUPPORT:   { char: 'H', fg: '#8B7355', bg: '#0e0c08', walkable: false, seeThrough: true,  damage: 0, thirstCost: 0, name: 'Mine support beam' },
     TOWN_WALL:      { char: '#', fg: '#B89868', bg: '#2a1e10', walkable: false, seeThrough: false, damage: 0, thirstCost: 0, name: 'Adobe wall' },
     TOWN_FLOOR:     { char: '.', fg: '#C8A878', bg: '#201808', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 0, name: 'Town square' },
     TOWN_DOOR:      { char: '+', fg: '#DAA520', bg: '#201808', walkable: true,  seeThrough: false, damage: 0, thirstCost: 0, name: 'Doorway' },
@@ -185,6 +190,14 @@ const ITEMS = {
     BANDAGE:        { name: 'Bandage',           type: 'heal',   heal: 8,  value: 5,  desc: 'Strips of clean cloth. Stanch the bleeding.' },
     LAUDANUM:       { name: 'Laudanum',          type: 'heal',   heal: 15, value: 10, desc: 'Tincture of opium. Kills the pain and everything else.' },
     TOBACCO:        { name: 'Tobacco pouch',     type: 'trade',  value: 3,  desc: 'Good Virginia tobacco. Worth more than gold to some men.' },
+    // Alcohol
+    MEZCAL:         { name: 'Mezcal',            type: 'food',   heal: 6,  value: 5,  desc: 'Smoky agave spirits. Burns like the desert sun.' },
+    PULQUE:         { name: 'Pulque',             type: 'food',   heal: 3,  value: 2,  desc: 'Fermented maguey sap. Thick as milk. The peasants drink.' },
+    AGUARDIENTE:    { name: 'Aguardiente',        type: 'food',   heal: 8,  value: 8,  desc: 'Cane liquor. White lightning from Sonora. Will make a man brave or dead.' },
+    // Mining tools
+    PICKAXE:        { name: 'Pickaxe',            type: 'tool', toolType: 'mining', miningBonus: 0.15, value: 12, desc: 'A heavy iron pick. The miners tool of choice.' },
+    GOLD_PAN:       { name: 'Gold pan',           type: 'tool', toolType: 'mining', miningBonus: 0.10, value: 8,  desc: 'A flat iron pan for separating gold from gravel.' },
+    MINERS_LAMP:    { name: 'Miners lamp',        type: 'tool', toolType: 'mining', miningBonus: 0.05, value: 6,  desc: 'A tin lamp burning whale oil. See what the dark hides.' },
     // Throwable
     THROWING_KNIFE: { name: 'Throwing knife',    type: 'throwable', atk: 4, value: 3, desc: 'A balanced blade for throwing.' },
     ROCK:           { name: 'Rock',              type: 'throwable', atk: 2, value: 0, desc: 'A fist-sized stone. Hurts when thrown.' },
@@ -192,6 +205,8 @@ const ITEMS = {
     GOLD_DUST:      { name: 'Gold dust',         type: 'valuable', value: 10, desc: 'A pouch of placer gold. Glittering and heavy.' },
     SILVER_NUGGET:  { name: 'Silver nugget',     type: 'valuable', value: 8,  desc: 'A lump of native silver. Tarnished but true.' },
     TURQUOISE:      { name: 'Turquoise stone',   type: 'valuable', value: 6,  desc: 'A blue-green stone. Sacred to the Navajo.' },
+    GOLD_NUGGET:    { name: 'Gold nugget',       type: 'valuable', value: 20, desc: 'A fat nugget of pure gold. Worth killing for.' },
+    SILVER_ORE:     { name: 'Silver ore',        type: 'valuable', value: 12, desc: 'Raw silver ore. Heavy and promising.' },
 };
 
 // ---- SHOP INVENTORY (by location type) ----
@@ -216,6 +231,9 @@ const SHOP_ITEMS = {
         { item: 'LAUDANUM', price: 12 },
         { item: 'THROWING_KNIFE', price: 4 },
         { item: 'TOBACCO', price: 4 },
+        { item: 'PICKAXE', price: 15 },
+        { item: 'GOLD_PAN', price: 10 },
+        { item: 'MINERS_LAMP', price: 8 },
     ],
     fort: [
         { item: 'REVOLVER', price: 25 },
@@ -273,6 +291,49 @@ const QUOTES = {
         { text: "He is dancing, dancing. He says that he will never die.", attr: "Blood Meridian" },
     ],
 };
+
+// ---- TAVERN DATA ----
+const TAVERN_DRINKS = [
+    { item: 'MEZCAL', price: 4 },
+    { item: 'PULQUE', price: 2 },
+    { item: 'AGUARDIENTE', price: 6 },
+    { item: 'WHISKEY', price: 5 },
+];
+
+const TAVERN_EVENTS = [
+    { text: 'A one-eyed man at the bar draws a knife on a vaquero. Chairs fly. Blood on the sawdust.', type: 'brawl', damage: [0, 3], goldChance: 0.3, goldAmount: [1, 5] },
+    { text: 'Two Americans argue over a card game. One pulls a pistol. The other dies where he sits.', type: 'brawl', damage: [0, 2], goldChance: 0.2, goldAmount: [2, 8] },
+    { text: 'A drunk soldier staggers into your table. He swings. The room erupts.', type: 'brawl', damage: [1, 4], goldChance: 0.2, goldAmount: [1, 3] },
+    { text: 'A scarred prospector slams the bar and buys a round for the house. The mezcal flows.', type: 'good', heal: 3 },
+    { text: 'A quiet Mexican woman sings a corrido. For a moment the violence pauses.', type: 'calm' },
+    { text: 'A grizzled scalphunter eyes your belt and says nothing. He drinks alone in the corner.', type: 'calm' },
+    { text: 'A fiddler plays. Men stomp and holler. Someone fires a pistol through the ceiling.', type: 'brawl', damage: [0, 1], goldChance: 0, goldAmount: [0, 0] },
+    { text: 'A gambler offers you a hand of monte. You lose track of the cards.', type: 'gamble', goldLoss: [2, 8], goldWin: [4, 15] },
+    { text: 'A man with no teeth tells you about a silver strike in the mountains. He wants a grubstake.', type: 'rumor' },
+    { text: 'The barkeep pours you a drink on the house. He says you look like you need it.', type: 'good', heal: 2 },
+];
+
+const TAVERN_QUOTES = [
+    { text: "They rode on and the sun in the east flushed the sandstone country to the west.", attr: "Blood Meridian" },
+    { text: "The truth about the world, he said, is that anything is possible.", attr: "Blood Meridian" },
+    { text: "Between the wish and the thing the world lies waiting.", attr: "All the Pretty Horses" },
+    { text: "You think when you wake up in the mornin yesterday dont count. But yesterday is all that does count.", attr: "No Country for Old Men" },
+    { text: "Anything that doesnt take years of your life and drive you to suicide hardly seems worth doing.", attr: "Suttree" },
+    { text: "There is no such joy in the tavern as upon the road thereto.", attr: "Blood Meridian" },
+    { text: "A man who has not passed through the inferno of his passions has never overcome them.", attr: "Blood Meridian" },
+    { text: "You never know what worse luck your bad luck has saved you from.", attr: "No Country for Old Men" },
+    { text: "Every man is the bard of his own existence.", attr: "Blood Meridian" },
+    { text: "The old man said that in his country once there were great cathedral bells. He said that the weights of the bells was the measure of the wealth of the people.", attr: "The Crossing" },
+];
+
+const MINE_LOOT = [
+    { item: 'GOLD_NUGGET', weight: 2 },
+    { item: 'GOLD_DUST', weight: 4 },
+    { item: 'SILVER_ORE', weight: 4 },
+    { item: 'SILVER_NUGGET', weight: 5 },
+    { item: 'TURQUOISE', weight: 3 },
+    { item: 'ROCK', weight: 4 },
+];
 
 const MULE_NAMES = [
     'Perdido', 'Ceniza', 'Polvo', 'Sombra', 'Viejo', 'Hueso',

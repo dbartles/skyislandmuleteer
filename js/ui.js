@@ -90,6 +90,7 @@ class UI {
         o.push(`<div class="town-option"><span class="key">[W]</span> Water mules (3 gold)</div>`);
         o.push(`<div class="town-option"><span class="key">[B]</span> Buy a mule (15 gold)</div>`);
         o.push(`<div class="town-option"><span class="key">[S]</span> Shop - buy supplies & gear</div>`);
+        o.push(`<div class="town-option"><span class="key">[T]</span> Tavern</div>`);
         o.push(`<div class="town-option"><span class="key">[I]</span> Inventory - sell items</div>`);
         if (game.player.contract && game.player.contract.dest === location.name) {
             o.push(`<div class="town-option" style="color:#DAA520"><span class="key">[D]</span> Deliver cargo ($${game.player.contract.pay})</div>`);

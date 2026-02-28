@@ -42,7 +42,7 @@
             <div id="messages"></div>
         </div>
         <div id="bottom-bar">
-            <span>WASD/Arrows: Move | SPACE: Wait | I: Inventory | C: Contracts | L: Look | T: Throw | M: Mine | ?: Help</span>
+            <span>WASD/Arrows: Move | SPACE: Wait | I: Inventory | C: Contracts | L: Look | T: Throw | M: Mine | O: Map | ENTER: Enter mine | ?: Help</span>
         </div>
     </div>
 
@@ -90,6 +90,8 @@ __  __       _      _
                     <p>L + direction - Look</p>
                     <p>T + direction - Throw item</p>
                     <p>M - Mine ore vein</p>
+                    <p>O - Map overview</p>
+                    <p>ENTER - Enter mine shaft</p>
                 </div>
                 <div class="help-col">
                     <h3>Menus</h3>
@@ -139,7 +141,7 @@ __  __       _      _
             <h2>INVENTORY</h2>
             <div id="inventory-list"></div>
             <p id="inventory-feedback" class="inv-feedback"></p>
-            <p class="prompt">E+# equip | U+# use | # sell (town) | ESC close</p>
+            <p class="prompt">E+# equip | U+# use | # sell (town) | Enter confirms 2-digit | ESC close</p>
         </div>
     </div>
 
@@ -150,7 +152,30 @@ __  __       _      _
             <p id="shop-gold" style="color:#DAA520"></p>
             <div id="shop-list"></div>
             <p id="shop-feedback" class="shop-feedback"></p>
-            <p class="prompt">Press number to buy, ESC to close</p>
+            <p class="prompt">Press # to buy (Enter confirms 2-digit) | ESC to close</p>
+        </div>
+    </div>
+
+    <!-- Map Overview Overlay -->
+    <div id="overview-screen" class="overlay hidden">
+        <div class="overlay-content" style="max-width:900px">
+            <h2>MAP OVERVIEW</h2>
+            <canvas id="overview-canvas" width="800" height="400" style="border:1px solid #3d2b1a;display:block;margin:10px auto"></canvas>
+            <p id="overview-pos" style="color:#8B7355;font-size:11px"></p>
+            <p class="prompt">Arrow keys to scroll | ESC to close</p>
+        </div>
+    </div>
+
+    <!-- Tavern Overlay -->
+    <div id="tavern-screen" class="overlay hidden">
+        <div class="overlay-content">
+            <h2 id="tavern-name"></h2>
+            <p id="tavern-event" class="tavern-event"></p>
+            <p id="tavern-quote" class="quote" style="margin:8px 0"></p>
+            <p id="tavern-gold" style="color:#DAA520"></p>
+            <div id="tavern-drinks"></div>
+            <p id="tavern-feedback" class="tavern-feedback"></p>
+            <p class="prompt">Press number to drink | [R] Another round | ESC to leave</p>
         </div>
     </div>
 
@@ -171,6 +196,8 @@ __  __       _      _
     <script src="js/map.js"></script>
     <script src="js/entities.js"></script>
     <script src="js/ui.js"></script>
+    <script>window.SAVED_MAP_DATA = null;</script>
+    <script src="js/saved_map.js"></script>
     <script src="js/game.js"></script>
 </body>
 </html>

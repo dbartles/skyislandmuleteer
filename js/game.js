@@ -137,12 +137,31 @@ class Game {
         this.combat = null;
         this.ui = null;
         this.turn = 0;
-        this.state = 'title'; // title, explore, town, contracts, inventory, shop, look, throw, help, dead
+        this.state = 'title'; // title, explore, town, contracts, inventory, shop, look, throw, help, dead, overview, tavern, mine
         this._contractOptions = [];
         this._shopItems = [];
         this._inputLocked = false;
         this._lookDir = null;
         this._throwItem = null;
+        // Input buffers for multi-digit numbers
+        this._shopInputBuffer = '';
+        this._shopInputTimer = null;
+        this._invInputBuffer = '';
+        this._invInputTimer = null;
+        this._inventoryEquipPending = false;
+        this._inventoryUsePending = false;
+        // Map overview state
+        this._overviewX = 0;
+        this._overviewY = 0;
+        this._overviewDisplay = null;
+        // Mine state
+        this._inMine = false;
+        this._mineMap = null;
+        this._mineW = 40;
+        this._mineH = 20;
+        this._minePlayerX = 0;
+        this._minePlayerY = 0;
+        this._mineEntrance = null; // {x, y} on the overworld
     }
 
     init() {
@@ -168,7 +187,12 @@ class Game {
 
     newGame() {
         this.map = new GameMap(MAP_WIDTH, MAP_HEIGHT);
-        this.map.init();
+
+        // Check localStorage for a saved default map
+        const loaded = this._tryLoadSavedMap();
+        if (!loaded) {
+            this.map.init();
+        }
 
         // Place player near Tucson - outside the town walls
         const tucson = LOCATIONS.find(l => l.name === 'Tucson');
@@ -218,6 +242,60 @@ class Game {
 
         this.render();
         this.ui.renderAll(this.player);
+    }
+
+    _tryLoadSavedMap() {
+        try {
+            let data = null;
+            let sourceName = '';
+
+            // Method 1: Check for saved_map.js file (works with file:// and http://)
+            if (window.SAVED_MAP_DATA && window.SAVED_MAP_DATA.tiles) {
+                data = window.SAVED_MAP_DATA;
+                sourceName = data.name || 'saved_map.js';
+            }
+
+            // Method 2: Check localStorage (works over http:// only)
+            if (!data) {
+                const defaultName = localStorage.getItem('sim_default_map');
+                if (!defaultName) return false;
+                const raw = localStorage.getItem('sim_map_' + defaultName);
+                if (!raw) return false;
+                data = JSON.parse(raw);
+                sourceName = defaultName;
+            }
+
+            if (!data || !data.tiles || data.tiles.length === 0) return false;
+
+            // Load tiles
+            for (let y = 0; y < this.map.height; y++) {
+                this.map.tiles[y] = [];
+                this.map.explored[y] = [];
+                this.map.visible[y] = [];
+                for (let x = 0; x < this.map.width; x++) {
+                    this.map.tiles[y][x] = (data.tiles[y] && data.tiles[y][x]) ? data.tiles[y][x] : 'SAND';
+                    this.map.explored[y][x] = false;
+                    this.map.visible[y][x] = false;
+                }
+            }
+
+            // Load entities from saved map (placed via editor)
+            if (data.entities && data.entities.length > 0) {
+                for (const e of data.entities) {
+                    if (ENTITY_TYPES[e.type]) {
+                        const entity = new Entity(e.type, e.x, e.y);
+                        this.entities.push(entity);
+                        this.map.addEntity(entity);
+                    }
+                }
+            }
+
+            this.ui.addMessage(`Loaded saved map: ${sourceName}`, 'system');
+            return true;
+        } catch (err) {
+            console.warn('Failed to load saved map:', err);
+            return false;
+        }
     }
 
     _spawnEntities() {
@@ -361,6 +439,25 @@ class Game {
             return;
         }
 
+        // Map overview
+        if (this.state === 'overview') {
+            e.preventDefault();
+            this._handleOverviewInput(key);
+            return;
+        }
+
+        // Tavern screen
+        if (this.state === 'tavern') {
+            this._handleTavernInput(key);
+            return;
+        }
+
+        // Mine interior
+        if (this.state === 'mine') {
+            this._handleMineInput(key);
+            return;
+        }
+
         // Town screen
         if (this.state === 'town') {
             this._handleTownInput(key);
@@ -424,6 +521,12 @@ class Game {
                     return;
                 case 'm': case 'M':
                     this._tryMine();
+                    return;
+                case 'o': case 'O':
+                    this._openOverview();
+                    return;
+                case 'Enter':
+                    this._tryEnterMine();
                     return;
                 default: return;
             }
@@ -582,7 +685,14 @@ class Game {
 
         this.ui.addMessage('You swing at the ore vein...', 'info');
         const rng = ROT.RNG;
-        if (rng.getUniform() < 0.6) {
+        // Mining tools increase success rate
+        let miningBonus = 0;
+        for (const item of this.player.inventory) {
+            if (item.toolType === 'mining' && item.miningBonus) {
+                miningBonus += item.miningBonus;
+            }
+        }
+        if (rng.getUniform() < 0.6 + miningBonus) {
             // Pick from mining loot table
             const totalWeight = MINING_LOOT.reduce((sum, e) => sum + e.weight, 0);
             let roll = rng.getUniform() * totalWeight;
@@ -663,6 +773,11 @@ class Game {
         const loc = this.map.getNearbyLocation(nx, ny, 3);
         const tileType = this.map.getTileType(nx, ny);
         if (loc && (tileType === 'TOWN_DOOR' || tileType === 'TOWN_FLOOR' || tileType === 'CAMPFIRE')) {
+            // Remove dead mules when arriving in town
+            const removed = this.player.removeDeadMules();
+            if (removed > 0) {
+                this.ui.addMessage(`The town undertaker hauls away ${removed} dead mule${removed > 1 ? 's' : ''} from your train.`, 'system');
+            }
             this.ui.showTownScreen(loc, this);
         }
 
@@ -774,6 +889,14 @@ class Game {
                 this.ui.hideTownScreen();
                 this.ui.showInventoryScreen(this);
                 break;
+            case 't': case 'T': {
+                const tavLoc = this.map.getNearbyLocation(this.player.x, this.player.y, 8);
+                if (tavLoc) {
+                    this.ui.hideTownScreen();
+                    this._openTavern(tavLoc);
+                }
+                break;
+            }
             case 'd': case 'D':
                 if (this.player.contract) {
                     const loc = this.map.getNearbyLocation(this.player.x, this.player.y, 8);
@@ -828,8 +951,11 @@ class Game {
 
     _handleInventoryInput(key) {
         if (key === 'Escape') {
+            this._invInputBuffer = '';
+            if (this._invInputTimer) { clearTimeout(this._invInputTimer); this._invInputTimer = null; }
+            this._inventoryEquipPending = false;
+            this._inventoryUsePending = false;
             this.ui.hideInventoryScreen();
-            // Return to town if we were in one
             const loc = this.map.getNearbyLocation(this.player.x, this.player.y, 8);
             const tileType = this.map.getTileType(this.player.x, this.player.y);
             if (loc && (tileType === 'TOWN_DOOR' || tileType === 'TOWN_FLOOR' || tileType === 'CAMPFIRE')) {
@@ -844,8 +970,10 @@ class Game {
 
         // Check for equip commands: E+number
         if (key.toLowerCase() === 'e') {
-            // Wait for next key
             this._inventoryEquipPending = true;
+            this._inventoryUsePending = false;
+            this._invInputBuffer = '';
+            if (this._invInputTimer) { clearTimeout(this._invInputTimer); this._invInputTimer = null; }
             if (fb) fb.textContent = 'Equip which item? Press number...';
             return;
         }
@@ -853,11 +981,63 @@ class Game {
         // Check for use commands: U+number
         if (key.toLowerCase() === 'u') {
             this._inventoryUsePending = true;
+            this._inventoryEquipPending = false;
+            this._invInputBuffer = '';
+            if (this._invInputTimer) { clearTimeout(this._invInputTimer); this._invInputTimer = null; }
             if (fb) fb.textContent = 'Use which item? Press number...';
             return;
         }
 
-        const num = parseInt(key);
+        // Enter confirms buffered input
+        if (key === 'Enter' && this._invInputBuffer.length > 0) {
+            this._processInventoryAction(parseInt(this._invInputBuffer));
+            this._invInputBuffer = '';
+            if (this._invInputTimer) { clearTimeout(this._invInputTimer); this._invInputTimer = null; }
+            return;
+        }
+
+        const digit = parseInt(key);
+        if (isNaN(digit)) {
+            this._inventoryEquipPending = false;
+            this._inventoryUsePending = false;
+            this._invInputBuffer = '';
+            if (this._invInputTimer) { clearTimeout(this._invInputTimer); this._invInputTimer = null; }
+            return;
+        }
+
+        this._invInputBuffer += key;
+        if (this._invInputTimer) clearTimeout(this._invInputTimer);
+
+        const bufNum = parseInt(this._invInputBuffer);
+        const maxItem = this.player.inventory.length;
+
+        // If 9 or fewer items, process immediately
+        if (maxItem <= 9) {
+            this._processInventoryAction(bufNum);
+            this._invInputBuffer = '';
+            return;
+        }
+
+        // If buffer is 2+ digits or can't form a larger valid number, process now
+        if (this._invInputBuffer.length >= 2 || bufNum * 10 > maxItem) {
+            this._processInventoryAction(bufNum);
+            this._invInputBuffer = '';
+            return;
+        }
+
+        // Wait for a second digit
+        const mode = this._inventoryEquipPending ? 'Equip' : (this._inventoryUsePending ? 'Use' : 'Sell');
+        if (fb) { fb.textContent = `${mode} item #${this._invInputBuffer}... (press Enter or another digit)`; fb.style.color = '#DAA520'; }
+        this._invInputTimer = setTimeout(() => {
+            if (this._invInputBuffer.length > 0) {
+                this._processInventoryAction(parseInt(this._invInputBuffer));
+                this._invInputBuffer = '';
+            }
+        }, 1500);
+    }
+
+    _processInventoryAction(num) {
+        const fb = document.getElementById('inventory-feedback');
         if (isNaN(num) || num < 1 || num > this.player.inventory.length) {
             this._inventoryEquipPending = false;
             this._inventoryUsePending = false;
@@ -909,6 +1089,8 @@ class Game {
 
     _handleShopInput(key) {
         if (key === 'Escape') {
+            this._shopInputBuffer = '';
+            if (this._shopInputTimer) { clearTimeout(this._shopInputTimer); this._shopInputTimer = null; }
             this.ui.hideShopScreen();
             const loc = this.map.getNearbyLocation(this.player.x, this.player.y, 8);
             if (loc) {
@@ -919,7 +1101,50 @@ class Game {
             return;
         }
 
-        const num = parseInt(key);
+        // Enter key confirms buffered input
+        if (key === 'Enter' && this._shopInputBuffer.length > 0) {
+            this._processShopPurchase(parseInt(this._shopInputBuffer));
+            this._shopInputBuffer = '';
+            if (this._shopInputTimer) { clearTimeout(this._shopInputTimer); this._shopInputTimer = null; }
+            return;
+        }
+
+        const digit = parseInt(key);
+        if (isNaN(digit)) return;
+
+        this._shopInputBuffer += key;
+        if (this._shopInputTimer) clearTimeout(this._shopInputTimer);
+
+        // If the buffer can't possibly be a valid prefix for any item, process now
+        const bufNum = parseInt(this._shopInputBuffer);
+        const maxItem = this._shopItems.length;
+
+        // If single digit and no items 10+, process immediately
+        if (maxItem <= 9) {
+            this._processShopPurchase(bufNum);
+            this._shopInputBuffer = '';
+            return;
+        }
+
+        // If buffer is already >= 10 or buffer * 10 > maxItem, process now
+        if (this._shopInputBuffer.length >= 2 || bufNum * 10 > maxItem) {
+            this._processShopPurchase(bufNum);
+            this._shopInputBuffer = '';
+            return;
+        }
+
+        // Otherwise wait briefly for a second digit
+        const fb = document.getElementById('shop-feedback');
+        if (fb) { fb.textContent = `Item #${this._shopInputBuffer}... (press Enter or another digit)`; fb.style.color = '#DAA520'; }
+        this._shopInputTimer = setTimeout(() => {
+            if (this._shopInputBuffer.length > 0) {
+                this._processShopPurchase(parseInt(this._shopInputBuffer));
+                this._shopInputBuffer = '';
+            }
+        }, 1500);
+    }
+
+    _processShopPurchase(num) {
         if (isNaN(num) || num < 1 || num > this._shopItems.length) return;
 
         const entry = this._shopItems[num - 1];
@@ -939,7 +1164,6 @@ class Game {
             fbColor = '#B22222';
         }
 
-        // Refresh shop display then set feedback
         const loc = this.map.getNearbyLocation(this.player.x, this.player.y, 8);
         if (loc) this.ui.showShopScreen(this, loc);
         const fb = document.getElementById('shop-feedback');
@@ -972,6 +1196,415 @@ class Game {
         this.player.contract = null;
         this.player.checkLevelUp(this);
         this.ui.renderAll(this.player);
+    }
+
+    // ---- MAP OVERVIEW ----
+    _openOverview() {
+        this.state = 'overview';
+        this._overviewX = Math.max(0, this.player.x - 40);
+        this._overviewY = Math.max(0, this.player.y - 20);
+        const screen = document.getElementById('overview-screen');
+        screen.classList.remove('hidden');
+        this._renderOverview();
+    }
+
+    _handleOverviewInput(key) {
+        const step = 5;
+        switch (key) {
+            case 'ArrowUp': case 'w': case 'W':
+                this._overviewY = Math.max(0, this._overviewY - step); break;
+            case 'ArrowDown': case 's': case 'S':
+                this._overviewY = Math.min(this.map.height - 1, this._overviewY + step); break;
+            case 'ArrowLeft': case 'a': case 'A':
+                this._overviewX = Math.max(0, this._overviewX - step); break;
+            case 'ArrowRight': case 'd': case 'D':
+                this._overviewX = Math.min(this.map.width - 1, this._overviewX + step); break;
+            case 'Escape':
+                document.getElementById('overview-screen').classList.add('hidden');
+                this.state = 'explore';
+                return;
+            default: return;
+        }
+        this._renderOverview();
+    }
+
+    _renderOverview() {
+        const canvas = document.getElementById('overview-canvas');
+        const ctx = canvas.getContext('2d');
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const cellW = 5;
+        const cellH = 5;
+        const viewW = Math.floor(cw / cellW);
+        const viewH = Math.floor(ch / cellH);
+
+        ctx.fillStyle = '#0d0a04';
+        ctx.fillRect(0, 0, cw, ch);
+
+        const startX = Math.max(0, Math.min(this.map.width - viewW, this._overviewX - Math.floor(viewW / 2)));
+        const startY = Math.max(0, Math.min(this.map.height - viewH, this._overviewY - Math.floor(viewH / 2)));
+
+        for (let y = 0; y < viewH; y++) {
+            for (let x = 0; x < viewW; x++) {
+                const mx = startX + x;
+                const my = startY + y;
+                if (mx >= this.map.width || my >= this.map.height) continue;
+                const tile = this.map.getTile(mx, my);
+                const explored = this.map.explored[my] && this.map.explored[my][mx];
+                const alpha = explored ? 0.7 : 0.25;
+                ctx.fillStyle = tile.bg || '#0d0a04';
+                ctx.fillRect(x * cellW, y * cellH, cellW, cellH);
+                ctx.fillStyle = tile.fg || '#555';
+                ctx.globalAlpha = alpha;
+                ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // Draw locations
+        ctx.font = '10px monospace';
+        ctx.textBaseline = 'bottom';
+        for (const loc of LOCATIONS) {
+            const sx = (loc.x - startX) * cellW;
+            const sy = (loc.y - startY) * cellH;
+            if (sx < 0 || sx >= cw || sy < 0 || sy >= ch) continue;
+            // Town dot
+            ctx.fillStyle = '#DAA520';
+            ctx.fillRect(sx - 2, sy - 2, 5, 5);
+            // Label
+            ctx.fillStyle = '#DAA520';
+            ctx.fillText(loc.name, sx - 10, sy - 5);
+        }
+
+        // Draw player position
+        const px = (this.player.x - startX) * cellW;
+        const py = (this.player.y - startY) * cellH;
+        if (px >= 0 && px < cw && py >= 0 && py < ch) {
+            ctx.fillStyle = '#FF4444';
+            ctx.fillRect(px - 3, py - 3, 7, 7);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '9px monospace';
+            ctx.fillText('@', px - 3, py + 10);
+        }
+
+        // Update position text
+        document.getElementById('overview-pos').textContent = `Position: ${this.player.x}, ${this.player.y}`;
+    }
+
+    // ---- TAVERN ----
+    _openTavern(location) {
+        this.state = 'tavern';
+        this._tavernLocation = location;
+        const screen = document.getElementById('tavern-screen');
+        document.getElementById('tavern-name').textContent = `${location.name} Tavern`;
+        document.getElementById('tavern-feedback').textContent = '';
+
+        // Build drink menu
+        let html = '';
+        TAVERN_DRINKS.forEach((d, i) => {
+            const item = ITEMS[d.item];
+            if (!item) return;
+            const canAfford = this.player.gold >= d.price;
+            const color = canAfford ? '#DEB887' : '#696969';
+            html += `<div class="tavern-drink" style="color:${color}"><span class="key">[${i + 1}]</span> ${item.name} - $${d.price} <span style="color:#696969;font-size:10px">${item.desc}</span></div>`;
+        });
+        document.getElementById('tavern-drinks').innerHTML = html;
+        document.getElementById('tavern-gold').textContent = `Gold: ${this.player.gold}`;
+        screen.classList.remove('hidden');
+
+        // Random tavern event
+        this._triggerTavernEvent();
+    }
+
+    _triggerTavernEvent() {
+        const event = TAVERN_EVENTS[Math.floor(ROT.RNG.getUniform() * TAVERN_EVENTS.length)];
+        const fb = document.getElementById('tavern-event');
+        fb.textContent = event.text;
+
+        if (event.type === 'brawl') {
+            const dmg = event.damage[0] + Math.floor(ROT.RNG.getUniform() * (event.damage[1] - event.damage[0] + 1));
+            if (dmg > 0) {
+                this.player.takeDamage(dmg);
+                this.ui.addMessage(`Caught in a brawl! Took ${dmg} damage.`, 'combat');
+            }
+            if (event.goldChance > 0 && ROT.RNG.getUniform() < event.goldChance) {
+                const gold = event.goldAmount[0] + Math.floor(ROT.RNG.getUniform() * (event.goldAmount[1] - event.goldAmount[0] + 1));
+                this.player.gold += gold;
+                this.ui.addMessage(`Found ${gold} gold in the chaos.`, 'gold');
+            }
+        } else if (event.type === 'good') {
+            if (event.heal) {
+                this.player.heal(event.heal);
+                this.ui.addMessage(`Healed ${event.heal} HP.`, 'good');
+            }
+        } else if (event.type === 'gamble') {
+            if (ROT.RNG.getUniform() < 0.4) {
+                const win = event.goldWin[0] + Math.floor(ROT.RNG.getUniform() * (event.goldWin[1] - event.goldWin[0] + 1));
+                this.player.gold += win;
+                fb.textContent += ` You win $${win}!`;
+            } else {
+                const loss = Math.min(this.player.gold, event.goldLoss[0] + Math.floor(ROT.RNG.getUniform() * (event.goldLoss[1] - event.goldLoss[0] + 1)));
+                this.player.gold -= loss;
+                fb.textContent += ` You lose $${loss}.`;
+            }
+        }
+
+        // Show a quote
+        if (ROT.RNG.getUniform() < 0.6) {
+            const q = TAVERN_QUOTES[Math.floor(ROT.RNG.getUniform() * TAVERN_QUOTES.length)];
+            document.getElementById('tavern-quote').textContent = `"${q.text}" - ${q.attr}`;
+        } else {
+            document.getElementById('tavern-quote').textContent = '';
+        }
+
+        this.ui.renderAll(this.player);
+    }
+
+    _handleTavernInput(key) {
+        if (key === 'Escape') {
+            document.getElementById('tavern-screen').classList.add('hidden');
+            if (this._tavernLocation) {
+                this.ui.showTownScreen(this._tavernLocation, this);
+            } else {
+                this.state = 'explore';
+            }
+            return;
+        }
+
+        // Another round (new event)
+        if (key === 'r' || key === 'R') {
+            this._triggerTavernEvent();
+            return;
+        }
+
+        const num = parseInt(key);
+        if (!isNaN(num) && num >= 1 && num <= TAVERN_DRINKS.length) {
+            const drink = TAVERN_DRINKS[num - 1];
+            const itemData = ITEMS[drink.item];
+            if (!itemData) return;
+
+            const fb = document.getElementById('tavern-feedback');
+            if (this.player.gold >= drink.price) {
+                this.player.gold -= drink.price;
+                const healAmt = itemData.heal || 3;
+                this.player.heal(healAmt);
+                if (fb) { fb.textContent = `You drink the ${itemData.name}. Healed ${healAmt} HP.`; fb.style.color = '#6B8E23'; }
+                document.getElementById('tavern-gold').textContent = `Gold: ${this.player.gold}`;
+            } else {
+                if (fb) { fb.textContent = `Cannot afford ${itemData.name}. Need $${drink.price}.`; fb.style.color = '#B22222'; }
+            }
+            this.ui.renderAll(this.player);
+        }
+    }
+
+    // ---- MINE INTERIOR ----
+    _tryEnterMine() {
+        const tileType = this.map.getTileType(this.player.x, this.player.y);
+        if (tileType !== 'MINE_ENTRANCE') return;
+
+        this._mineEntrance = { x: this.player.x, y: this.player.y };
+        this._generateMine();
+        this._inMine = true;
+        this.state = 'mine';
+        this.ui.addMessage('You descend into the darkness of the mine...', 'system');
+        this._renderMine();
+    }
+
+    _generateMine() {
+        const w = this._mineW;
+        const h = this._mineH;
+        this._mineMap = [];
+
+        // Fill with walls
+        for (let y = 0; y < h; y++) {
+            this._mineMap[y] = [];
+            for (let x = 0; x < w; x++) {
+                this._mineMap[y][x] = 'MINE_WALL';
+            }
+        }
+
+        // Carve tunnels using a simple random walk + rooms approach
+        const rng = ROT.RNG;
+
+        // Main horizontal tunnel
+        const mainY = Math.floor(h / 2);
+        for (let x = 1; x < w - 1; x++) {
+            this._mineMap[mainY][x] = 'MINE_FLOOR';
+            if (rng.getUniform() < 0.3) {
+                const dy = rng.getUniform() < 0.5 ? -1 : 1;
+                if (mainY + dy > 0 && mainY + dy < h - 1) {
+                    this._mineMap[mainY + dy][x] = 'MINE_FLOOR';
+                }
+            }
+        }
+
+        // Branch tunnels
+        for (let b = 0; b < 5; b++) {
+            const bx = 3 + Math.floor(rng.getUniform() * (w - 8));
+            const dir = rng.getUniform() < 0.5 ? -1 : 1;
+            let cy = mainY;
+            for (let i = 0; i < 4 + Math.floor(rng.getUniform() * 5); i++) {
+                cy += dir;
+                if (cy <= 0 || cy >= h - 1) break;
+                this._mineMap[cy][bx] = 'MINE_FLOOR';
+                // Widen sometimes
+                if (rng.getUniform() < 0.4 && bx + 1 < w - 1) this._mineMap[cy][bx + 1] = 'MINE_FLOOR';
+                if (rng.getUniform() < 0.3 && bx - 1 > 0) this._mineMap[cy][bx - 1] = 'MINE_FLOOR';
+            }
+        }
+
+        // Small rooms (ore chambers)
+        for (let r = 0; r < 3; r++) {
+            const rx = 4 + Math.floor(rng.getUniform() * (w - 10));
+            const ry = 2 + Math.floor(rng.getUniform() * (h - 5));
+            const rw = 2 + Math.floor(rng.getUniform() * 3);
+            const rh = 2 + Math.floor(rng.getUniform() * 2);
+            for (let y = ry; y < Math.min(ry + rh, h - 1); y++) {
+                for (let x = rx; x < Math.min(rx + rw, w - 1); x++) {
+                    this._mineMap[y][x] = 'MINE_FLOOR';
+                }
+            }
+            // Connect room to main tunnel
+            const connX = rx;
+            const startY = Math.min(ry, mainY);
+            const endY = Math.max(ry, mainY);
+            for (let y = startY; y <= endY; y++) {
+                if (y > 0 && y < h - 1) this._mineMap[y][connX] = 'MINE_FLOOR';
+            }
+        }
+
+        // Place ore veins
+        let oreCount = 0;
+        for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+                if (this._mineMap[y][x] === 'MINE_FLOOR' && rng.getUniform() < 0.12) {
+                    this._mineMap[y][x] = 'MINE_ORE';
+                    oreCount++;
+                }
+            }
+        }
+
+        // Place support beams
+        for (let x = 5; x < w - 2; x += (4 + Math.floor(rng.getUniform() * 4))) {
+            if (this._mineMap[mainY - 1] && this._mineMap[mainY - 1][x] === 'MINE_FLOOR') {
+                this._mineMap[mainY - 1][x] = 'MINE_SUPPORT';
+            }
+        }
+
+        // Entrance at left
+        this._mineMap[mainY][0] = 'MINE_FLOOR';
+        this._minePlayerX = 1;
+        this._minePlayerY = mainY;
+    }
+
+    _handleMineInput(key) {
+        let dx = 0, dy = 0;
+        switch (key) {
+            case 'ArrowUp': case 'w': case 'W': dy = -1; break;
+            case 'ArrowDown': case 's': case 'S': dy = 1; break;
+            case 'ArrowLeft': case 'a': case 'A': dx = -1; break;
+            case 'ArrowRight': case 'd': case 'D': dx = 1; break;
+            case 'm': case 'M': this._tryMineMine(); return;
+            case 'Escape':
+                // Exit mine
+                this._exitMine();
+                return;
+            default: return;
+        }
+
+        const nx = this._minePlayerX + dx;
+        const ny = this._minePlayerY + dy;
+
+        if (nx < 0) {
+            // Exiting the mine
+            this._exitMine();
+            return;
+        }
+
+        if (nx < 0 || nx >= this._mineW || ny < 0 || ny >= this._mineH) return;
+        const tile = this._mineMap[ny][nx];
+        if (tile === 'MINE_WALL' || tile === 'MINE_SUPPORT') return;
+
+        this._minePlayerX = nx;
+        this._minePlayerY = ny;
+        this._renderMine();
+    }
+
+    _tryMineMine() {
+        const tile = this._mineMap[this._minePlayerY][this._minePlayerX];
+        if (tile !== 'MINE_ORE') {
+            this.ui.addMessage('Nothing to mine here.', 'system');
+            return;
+        }
+
+        const rng = ROT.RNG;
+        let miningBonus = 0;
+        for (const item of this.player.inventory) {
+            if (item.toolType === 'mining' && item.miningBonus) miningBonus += item.miningBonus;
+        }
+
+        this.ui.addMessage('You swing at the rich ore...', 'info');
+        if (rng.getUniform() < 0.7 + miningBonus) {
+            // Use the richer mine loot table
+            const totalWeight = MINE_LOOT.reduce((sum, e) => sum + e.weight, 0);
+            let roll = rng.getUniform() * totalWeight;
+            let chosen = MINE_LOOT[0].item;
+            for (const entry of MINE_LOOT) {
+                roll -= entry.weight;
+                if (roll <= 0) { chosen = entry.item; break; }
+            }
+            const item = { ...ITEMS[chosen] };
+            this.player.inventory.push(item);
+            this.ui.addMessage(`You extract: ${item.name}!`, 'gold');
+
+            if (rng.getUniform() < 0.4) {
+                this._mineMap[this._minePlayerY][this._minePlayerX] = 'MINE_FLOOR';
+                this.ui.addMessage('The vein is exhausted.', 'system');
+            }
+        } else {
+            this.ui.addMessage('Nothing but rock.', 'system');
+        }
+        this.ui.renderAll(this.player);
+        this._renderMine();
+    }
+
+    _exitMine() {
+        this._inMine = false;
+        this.state = 'explore';
+        this.ui.addMessage('You emerge from the mine, blinking in the daylight.', 'info');
+        this.render();
+        this.ui.renderAll(this.player);
+    }
+
+    _renderMine() {
+        const display = this.display;
+        display.clear();
+
+        // Center viewport on mine player
+        const vpW = VIEWPORT_W;
+        const vpH = VIEWPORT_H;
+        const startX = Math.max(0, Math.min(this._mineW - vpW, this._minePlayerX - Math.floor(vpW / 2)));
+        const startY = Math.max(0, Math.min(this._mineH - vpH, this._minePlayerY - Math.floor(vpH / 2)));
+
+        for (let vy = 0; vy < vpH; vy++) {
+            for (let vx = 0; vx < vpW; vx++) {
+                const mx = startX + vx;
+                const my = startY + vy;
+                if (mx >= this._mineW || my >= this._mineH || mx < 0 || my < 0) continue;
+                const tileType = this._mineMap[my][mx];
+                const tile = TERRAIN[tileType];
+                if (tile) {
+                    display.draw(vx, vy, tile.char, tile.fg, tile.bg);
+                }
+            }
+        }
+
+        // Draw player
+        const px = this._minePlayerX - startX;
+        const py = this._minePlayerY - startY;
+        if (px >= 0 && px < vpW && py >= 0 && py < vpH) {
+            display.draw(px, py, '@', '#F0E0C0', '#0e0c08');
+        }
     }
 
     _endTurn() {

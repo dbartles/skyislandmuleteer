@@ -37,6 +37,7 @@ class GameMap {
         this._generateVegetation();
         this._generateWaterSources();
         this._generateOreVeins();
+        this._generateMineEntrances();
         this._generateRoads();
         this._generateLocations();
         this._generateAtmosphere();
@@ -317,6 +318,27 @@ class GameMap {
                         if (t === 'FOOTHILL' || t === 'GRAVEL' || this._isDesert(t)) {
                             this.tiles[vy][vx] = 'ORE_VEIN';
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    _generateMineEntrances() {
+        const rng = ROT.RNG;
+        // Place mine entrances near some mountain ranges
+        for (const range of MOUNTAIN_RANGES) {
+            if (rng.getUniform() < 0.5) continue; // Only ~half of ranges get mines
+            const numMines = 1 + Math.floor(rng.getUniform() * 2);
+            for (let m = 0; m < numMines; m++) {
+                const angle = rng.getUniform() * Math.PI * 2;
+                const dist = range.rx * 0.6 + rng.getUniform() * range.rx * 0.3;
+                const mx = Math.round(range.cx + Math.cos(angle) * dist);
+                const my = Math.round(range.cy + Math.sin(angle) * dist);
+                if (mx >= 1 && mx < this.width - 1 && my >= 1 && my < this.height - 1) {
+                    const t = this.tiles[my][mx];
+                    if (t === 'FOOTHILL' || t === 'GRAVEL' || this._isDesert(t)) {
+                        this.tiles[my][mx] = 'MINE_ENTRANCE';
                     }
                 }
             }

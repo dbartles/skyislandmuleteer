@@ -409,6 +409,38 @@ body {
     display: inline-block;
 }
 
+/* Tavern screen */
+.tavern-event {
+    color: #CD853F;
+    font-style: italic;
+    font-size: 13px;
+    margin: 10px 0;
+    padding: 8px;
+    background: #1a1206;
+    border: 1px solid #3d2b1a;
+    text-align: left;
+}
+
+.tavern-drink {
+    padding: 6px 10px;
+    margin: 3px 0;
+    background: #1a1206;
+    border: 1px solid #2a1e10;
+    text-align: left;
+    font-size: 12px;
+}
+
+.tavern-drink:hover {
+    border-color: #DAA520;
+}
+
+.tavern-feedback {
+    color: #C4A882;
+    font-size: 13px;
+    margin-top: 10px;
+    min-height: 18px;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
