@@ -1,5 +1,6 @@
 // ============================================================
 // SKY ISLAND MULETEER - Main Game
+// Copyright (c) 2026 Devin Bartley. MIT License.
 // ============================================================
 
 class Combat {
@@ -235,8 +236,8 @@ class Game {
         this.turn = 0;
         this.state = 'explore';
 
-        this.ui.addMessage('You stand at the edge of Tucson, two mules in tow.', 'info');
-        this.ui.addMessage('The desert stretches endless in every direction.', 'info');
+        this.ui.addMessage('You awake at the edge of Tucson in the predawn, two mules hobbled beside you with rawhide hackamores. ', 'info');
+        this.ui.addMessage('To the North the jagged mountains are pure blue in the dawn and everywhere birds twitter and the sun when it rose caught the moon in the west so that they lay opposed to each other across the earth, the sun whitehot and the moon a pale replica, as if they were the ends of a common bore beyond whose terminals burned worlds past all reckoning.', 'info');
         this.ui.addMessage('Visit a town to find contracts. Survive.', 'system');
 
         const q = QUOTES.travel[Math.floor(ROT.RNG.getUniform() * QUOTES.travel.length)];
@@ -873,7 +874,7 @@ class Game {
                     this.player.gold -= 5;
                     this.player.hp = this.player.maxHp;
                     this.player.thirst = this.player.maxThirst;
-                    this.ui.setTownFeedback('You rest in the shade. Wounds mended, thirst quenched.', '#6B8E23');
+                    this.ui.setTownFeedback('You hobble your mules and rest in the shade against the cool wall of the presidio. Wounds mended, thirst quenched.', '#6B8E23');
                 } else {
                     this.ui.setTownFeedback('Not enough gold. You need 5.', '#B22222');
                 }

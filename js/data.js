@@ -1,5 +1,8 @@
 // ============================================================
 // SKY ISLAND MULETEER - Game Data
+// Copyright (c) 2026 Devin Bartley. MIT License.
+// Inspired by Blood Meridian by Cormac McCarthy.
+// Quotes used under fair use.
 // All terrain, entities, items, locations, and quotes
 // Edit this file to change game content without touching code
 // ============================================================

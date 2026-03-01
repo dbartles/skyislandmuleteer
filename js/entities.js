@@ -1,5 +1,6 @@
 // ============================================================
 // SKY ISLAND MULETEER - Entities
+// Copyright (c) 2026 Devin Bartley. MIT License.
 // ============================================================
 
 class Entity {

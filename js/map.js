@@ -1,5 +1,6 @@
 // ============================================================
 // SKY ISLAND MULETEER - Map Generation
+// Copyright (c) 2026 Devin Bartley. MIT License.
 // ============================================================
 
 class GameMap {
