@@ -225,8 +225,10 @@ class Game {
         this.player.mules[1].x = mx2;
         this.player.mules[1].y = my2;
 
-        // Spawn entities
-        this.entities = [];
+        // Spawn entities (keep any loaded from saved map)
+        if (!this.entities || this.entities.length === 0) {
+            this.entities = [];
+        }
         this._spawnEntities();
         this._spawnSpecialCharacters();
 
@@ -398,7 +400,7 @@ class Game {
         const bjX = 320 + Math.floor(rng.getUniform() * 60);
         const bjY = 120 + Math.floor(rng.getUniform() * 40);
         if (this.map.isWalkable(bjX, bjY)) {
-            const bj = new Entity('BLACK_JACKSON', bjX, bjY);
+            const bj = new Entity('JACKSON', bjX, bjY);
             this.entities.push(bj);
             this.map.addEntity(bj);
         }
@@ -847,7 +849,7 @@ class Game {
                 this.ui.addMessage(`A heavy-set teamster with a cat purring inside his shirt.`, 'info');
                 this.ui.addMessage(`"This here cat's better company than any man I ever rode with."`, 'quote');
                 break;
-            case 'BLACK_JACKSON':
+            case 'JACKSON':
                 this.ui.addMessage(`A dark giant of a man. His quiet gaze misses nothing.`, 'info');
                 this.ui.addMessage(`"Watch your back out there. Ain't nobody else will."`, 'quote');
                 break;

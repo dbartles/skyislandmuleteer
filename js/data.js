@@ -41,7 +41,7 @@ const TERRAIN = {
     CREEK:          { char: '~', fg: '#5A8AAA', bg: '#0a1520', walkable: true,  seeThrough: true,  damage: 0, thirstCost: -3, name: 'Creek' },
     RIVER:          { char: '~', fg: '#4682B4', bg: '#0a1828', walkable: false, seeThrough: true,  damage: 0, thirstCost: 0, name: 'River' },
     RIVER_FORD:     { char: '~', fg: '#5A92B4', bg: '#0a1520', walkable: true,  seeThrough: true,  damage: 0, thirstCost: -3, name: 'River ford' },
-    CENOTE:         { char: 'O', fg: '#3A7ACA', bg: '#0a1828', walkable: true,  seeThrough: true,  damage: 0, thirstCost: -8, name: 'Cenote' },
+    TINAJA:         { char: 'O', fg: '#3A7ACA', bg: '#0a1828', walkable: true,  seeThrough: true,  damage: 0, thirstCost: -8, name: 'Tinaja' },
     SPRING:         { char: 'o', fg: '#4A8ABA', bg: '#0a1520', walkable: true,  seeThrough: true,  damage: 0, thirstCost: -5, name: 'Desert spring' },
     DRY_WASH:       { char: '~', fg: '#B0A080', bg: '#181208', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 1, name: 'Dry wash' },
     TRAIL:          { char: '.', fg: '#DEB887', bg: '#1a1408', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 1, name: 'Trail' },
@@ -95,7 +95,7 @@ const ENTITY_TYPES = {
     TOADVINE:         { char: 'T', fg: '#CC8844', name: 'Toadvine',               hp: 14, atk: 5, def: 2, speed: 1, hostile: false, aggroRange: 0, xp: 0, special: true, desc: 'A scarred man with burn marks and no ears. He has survived things that would kill most men twice.' },
     GLANTON:          { char: 'G', fg: '#FF4466', name: 'John Joel Glanton',      hp: 20, atk: 8, def: 4, speed: 1, hostile: false, aggroRange: 0, xp: 0, special: true, desc: 'John Joel Glanton. Captain of scalphunters. His eyes are as empty as the desert.' },
     BATHCAT:          { char: 'R', fg: '#BB8866', name: 'Bathcat',                hp: 10, atk: 3, def: 2, speed: 1, hostile: false, aggroRange: 0, xp: 0, special: true, desc: 'A heavy-set teamster. He carries a cat in his shirt and speaks to it tenderly.' },
-    BLACK_JACKSON:    { char: 'H', fg: '#DDAAFF', name: 'Black Jackson',          hp: 16, atk: 7, def: 3, speed: 1, hostile: false, aggroRange: 0, xp: 0, special: true, desc: 'A dark giant of a man. He moves with the quiet menace of a coiled spring.' },
+    JACKSON:          { char: 'H', fg: '#DDAAFF', name: 'Jackson',          hp: 16, atk: 7, def: 3, speed: 1, hostile: false, aggroRange: 0, xp: 0, special: true, desc: 'A dark giant of a man. He moves with the quiet menace of a coiled spring.' },
 
     // --- Neutral NPCs ---
     TOWNSPERSON:      { char: 't', fg: '#887766', name: 'Townsperson',            hp: 5,  atk: 1, def: 0, speed: 1, hostile: false, aggroRange: 0, xp: 0, desc: 'A local resident going about their business.' },

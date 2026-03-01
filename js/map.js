@@ -258,14 +258,14 @@ class GameMap {
 
     _generateWaterSources() {
         const rng = ROT.RNG;
-        // Cenotes (tanks) in the desert - larger clearings
+        // TINAJAS (tanks) in the desert - larger clearings
         for (let i = 0; i < 30; i++) {
             let attempts = 0;
             while (attempts < 80) {
                 const x = Math.floor(rng.getUniform() * this.width);
                 const y = Math.floor(rng.getUniform() * this.height);
                 if (this._isDesert(this.tiles[y][x])) {
-                    // Cenotes are 2-4 tiles with surrounding grass
+                    // TINAJAS are 2-4 tiles with surrounding grass
                     const size = 1 + Math.floor(rng.getUniform() * 3);
                     for (let dy = -size; dy <= size; dy++) {
                         for (let dx = -size; dx <= size; dx++) {
@@ -273,7 +273,7 @@ class GameMap {
                             if (nx < 0 || nx >= this.width || ny < 0 || ny >= this.height) continue;
                             const d = Math.abs(dx) + Math.abs(dy);
                             if (d <= 1) {
-                                this.tiles[ny][nx] = 'CENOTE';
+                                this.tiles[ny][nx] = 'TINAJA';
                             } else if (d <= size && this._isDesert(this.tiles[ny][nx])) {
                                 this.tiles[ny][nx] = 'DRY_GRASS';
                             }
@@ -395,15 +395,15 @@ class GameMap {
         const size = loc.size || 3;
 
         if (loc.type === 'tanks') {
-            // Hueco Tanks: cenote center, bones ring, boulder/canyon wall outer ring
+            // Hueco Tanks: TINAJA center, bones ring, boulder/canyon wall outer ring
             this.tiles[loc.y][loc.x] = 'CAMPFIRE';
-            // Inner ring: cenote water basin
+            // Inner ring:  water basin
             for (let dy = -1; dy <= 1; dy++) {
                 for (let dx = -1; dx <= 1; dx++) {
                     if (dx === 0 && dy === 0) continue;
                     const nx = loc.x + dx, ny = loc.y + dy;
                     if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height) {
-                        this.tiles[ny][nx] = 'CENOTE';
+                        this.tiles[ny][nx] = 'TINAJA';
                     }
                 }
             }
