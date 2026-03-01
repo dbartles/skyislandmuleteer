@@ -42,6 +42,7 @@ class GameMap {
         this._generateRoads();
         this._generateLocations();
         this._generateAtmosphere();
+        this._placeQuoteTriggers();
     }
 
     _generateDesertBase() {
@@ -507,6 +508,15 @@ class GameMap {
                 if (r < 0.4) this.tiles[y][x] = 'BONES';
                 else if (r < 0.7) this.tiles[y][x] = 'RUINS';
                 else this.tiles[y][x] = 'GRAVE';
+            }
+        }
+    }
+
+    _placeQuoteTriggers() {
+        if (typeof MAP_QUOTES === 'undefined') return;
+        for (const q of MAP_QUOTES) {
+            if (q.x >= 0 && q.x < this.width && q.y >= 0 && q.y < this.height) {
+                this.tiles[q.y][q.x] = 'QUOTE_MARKER';
             }
         }
     }

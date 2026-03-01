@@ -476,6 +476,55 @@ body {
     min-height: 18px;
 }
 
+/* Legend screen */
+.legend-content {
+    max-width: 850px;
+    text-align: left;
+}
+
+.legend-group {
+    margin: 10px 0;
+}
+
+.legend-group h3 {
+    color: #DAA520;
+    font-size: 12px;
+    margin: 0 0 4px 0;
+    border-bottom: 1px solid #3d2b1a;
+    padding-bottom: 2px;
+}
+
+.legend-entry {
+    display: inline-block;
+    width: 180px;
+    margin: 2px 0;
+    font-size: 12px;
+    color: #C4A882;
+}
+
+.legend-glyph {
+    display: inline-block;
+    width: 16px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Quote trigger overlay */
+.quote-trigger-text {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #8B7355;
+    font-style: italic;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.quote-trigger-attr {
+    color: #696969;
+    font-size: 12px;
+    margin-top: 15px;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;

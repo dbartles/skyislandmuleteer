@@ -226,6 +226,56 @@ class UI {
     showHelp() { document.getElementById('help-screen').classList.remove('hidden'); }
     hideHelp() { document.getElementById('help-screen').classList.add('hidden'); }
 
+    showLegend() {
+        const container = document.getElementById('legend-content');
+        const terrainGroups = {
+            'Ground': ['SAND', 'HARD_PAN', 'DUST', 'SCRUB', 'DRY_GRASS', 'GRAVEL', 'CANYON_FLOOR', 'FOOTHILL', 'MOUNTAIN_PASS', 'TRAIL', 'ROAD', 'DRY_WASH'],
+            'Vegetation & Cacti': ['SAGUARO', 'CHOLLA', 'PRICKLY_PEAR', 'BARREL_CACTUS', 'OCOTILLO', 'MESQUITE', 'PALO_VERDE', 'IRONWOOD', 'JUNIPER', 'PINE', 'OAK'],
+            'Water Sources': ['CREEK', 'RIVER', 'RIVER_FORD', 'TINAJA', 'SPRING'],
+            'Structures & Towns': ['TOWN_WALL', 'TOWN_FLOOR', 'TOWN_DOOR', 'BUILDING', 'FORT_WALL', 'CAMPFIRE', 'RUINS', 'BONES', 'GRAVE'],
+            'Mining': ['ORE_VEIN', 'MINE_ENTRANCE', 'MINE_FLOOR', 'MINE_WALL', 'MINE_ORE', 'MINE_SUPPORT'],
+            'Terrain': ['ROCK', 'BOULDER', 'CANYON_WALL', 'MOUNTAIN', 'PEAK'],
+        };
+        const entityGroups = {
+            'Hostile Humans': ['APACHE_WARRIOR', 'APACHE_SCOUT', 'COMANCHE_RIDER', 'BANDITO', 'DESPERADO', 'FILIBUSTER', 'DESERTER', 'SCALPHUNTER'],
+            'Hostile Animals': ['BLACK_BEAR', 'MOUNTAIN_LION', 'COYOTE', 'DESERT_WOLF', 'RATTLESNAKE', 'GILA_MONSTER', 'JAVELINA', 'SCORPION', 'VULTURE'],
+            'Named Characters': ['JUDGE_HOLDEN', 'THE_KID', 'TOBIN', 'TOADVINE', 'GLANTON', 'BATHCAT', 'JACKSON'],
+            'Neutral NPCs': ['TOWNSPERSON', 'MERCHANT', 'CAVALRY', 'MEXICAN_SOLDIER', 'PADRE'],
+        };
+        let html = '';
+        for (const [group, keys] of Object.entries(terrainGroups)) {
+            html += `<div class="legend-group"><h3>${group}</h3>`;
+            for (const key of keys) {
+                const t = TERRAIN[key];
+                if (!t) continue;
+                html += `<span class="legend-entry"><span class="legend-glyph" style="color:${t.fg}">${t.char}</span> ${t.name}</span>`;
+            }
+            html += '</div>';
+        }
+        for (const [group, keys] of Object.entries(entityGroups)) {
+            html += `<div class="legend-group"><h3>${group}</h3>`;
+            for (const key of keys) {
+                const e = ENTITY_TYPES[key];
+                if (!e) continue;
+                html += `<span class="legend-entry"><span class="legend-glyph" style="color:${e.fg}">${e.char}</span> ${e.name}</span>`;
+            }
+            html += '</div>';
+        }
+        html += `<div class="legend-group"><h3>You</h3><span class="legend-entry"><span class="legend-glyph" style="color:#F0E0C0">@</span> Muleteer (you)</span><span class="legend-entry"><span class="legend-glyph" style="color:#8B6914">m</span> Your mule</span></div>`;
+        container.innerHTML = html;
+        document.getElementById('legend-screen').classList.remove('hidden');
+    }
+
+    hideLegend() { document.getElementById('legend-screen').classList.add('hidden'); }
+
+    showQuoteTrigger(quote) {
+        document.getElementById('quote-trigger-text').textContent = `"${quote.text}"`;
+        document.getElementById('quote-trigger-attr').textContent = `- ${quote.attr}`;
+        document.getElementById('quote-trigger-screen').classList.remove('hidden');
+    }
+
+    hideQuoteTrigger() { document.getElementById('quote-trigger-screen').classList.add('hidden'); }
+
     updateTopBar(turn, player, map) {
         document.getElementById('turn-counter').textContent = `Turn: ${turn}`;
         const loc = map.getNearbyLocation(player.x, player.y, 8);

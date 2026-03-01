@@ -64,6 +64,7 @@ const TERRAIN = {
     FORT_WALL:      { char: '#', fg: '#908070', bg: '#201810', walkable: false, seeThrough: false, damage: 0, thirstCost: 0, name: 'Fort wall' },
     CAMPFIRE:       { char: '*', fg: '#FF6030', bg: '#201008', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 0, name: 'Campfire' },
     GRAVE:          { char: '+', fg: '#808080', bg: '#1a1206', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 1, name: 'Grave marker' },
+    QUOTE_MARKER:   { char: '.', fg: '#C4A882', bg: '#1a1206', walkable: true,  seeThrough: true,  damage: 0, thirstCost: 1, name: 'Desert sand' },
 };
 
 // ---- ENTITY TYPES ----
@@ -398,6 +399,15 @@ const MINING_LOOT = [
     { item: 'SILVER_NUGGET', weight: 5 },
     { item: 'TURQUOISE', weight: 4 },
     { item: 'ROCK', weight: 8 },
+];
+
+const MAP_QUOTES = [
+    { x: 300, y: 100, text: "They rode on and the sun in the east flushed the sandstone country to the west before them so that they rode through a pale and fiery dawn. The trail wound through the mountains like a river of red dust.", attr: "Blood Meridian" },
+    { x: 180, y: 180, text: "In the neuter austerity of that terrain all phenomena were bided in a single and brooding quietude. The sun set and darkness came quickly over the land.", attr: "Blood Meridian" },
+    { x: 450, y: 80, text: "You ride past trapdykes of porphyry and plugs of quartz and past the bones of dead mules bleaching in the alkaline flats and the wind carries the stench of carrion and the sky is white with vultures turning in the updrafts.", attr: "Blood Meridian" },
+    { x: 350, y: 200, text: "The survivors slept with their alien hearts beating in the sand like pilgrims exhausted upon the face of the planet Anareta, clutching their rolls of hides and their rifles and their whiskered faces thrown back upon their saddles.", attr: "Blood Meridian" },
+    { x: 150, y: 130, text: "They watched storms out there so distant they could not be heard, the silent lightning flaring sheetwise and the thin black legs of the tornadoes dangling out of the thunderheads like the tentacles of some pelagic monster.", attr: "Blood Meridian" },
+    { x: 500, y: 50, text: "The desert upon which they were entrained was desert absolute and it was devoid of feature altogether and there was nothing to mark the progress upon it. The earth fell away on every side equally in its arcature and by these dimensions the group were themselves the only feature in the landscape.", attr: "Blood Meridian" },
 ];
 
 const PLAYER_DEFAULTS = {

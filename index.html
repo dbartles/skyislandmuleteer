@@ -42,7 +42,7 @@
             <div id="messages"></div>
         </div>
         <div id="bottom-bar">
-            <span>WASD/Arrows: Move | SPACE: Wait | I: Inventory | C: Contracts | L: Look | T: Throw | M: Mine | O: Map | ENTER: Enter mine | ?: Help</span>
+            <span>WASD/Arrows: Move | SPACE: Wait | I: Inventory | C: Contracts | L: Look | T: Throw | M: Mine | O: Map | N: Legend | K: Camp | ENTER: Enter mine | ?: Help</span>
         </div>
     </div>
 
@@ -94,11 +94,13 @@ __  __       _      _
             <div class="help-section">
                 <h3>Your Character <span class="help-glyph">@</span></h3>
                 <p>You have HP (health), thirst, gold, attack/defense stats, and equipment slots for head, body, feet, and weapon. Thirst drains as you walk — reach 0 and you start losing HP. Find water to survive.</p>
+                <p>Be careful of your surroundings before setting up camp. Lest ye beset in the darkest hours of the night.</p>
             </div>
 
             <div class="help-section">
                 <h3>Your Mules <span class="help-glyph">m</span></h3>
                 <p>Mules follow you in a snake-like train. Each mule carries cargo, has its own thirst and HP, and can be spooked by cacti or combat. Spooked mules scatter and must be recovered. Your are responsible for your mules safety in this wild and barbarous terrain. Dead mules drop their cargo. Water your mules in town or you can try at tinajas, tanks, rivers and springs but mules are stubborn and might not drink in the desert. If you dont get them water they will die.</p>
+
             </div>
 
             <div class="help-section">
@@ -230,6 +232,24 @@ __  __       _      _
             <div id="death-stats"></div>
             <br>
             <p class="prompt">Press ENTER to try again</p>
+        </div>
+    </div>
+
+    <!-- Legend Overlay -->
+    <div id="legend-screen" class="overlay hidden">
+        <div class="overlay-content legend-content">
+            <h2>MAP LEGEND</h2>
+            <div id="legend-content"></div>
+            <p class="prompt">Press ESC to close</p>
+        </div>
+    </div>
+
+    <!-- Quote Trigger Overlay -->
+    <div id="quote-trigger-screen" class="overlay hidden">
+        <div class="overlay-content">
+            <p id="quote-trigger-text" class="quote-trigger-text"></p>
+            <p id="quote-trigger-attr" class="quote-trigger-attr"></p>
+            <p class="prompt">Press ESC or ENTER to continue</p>
         </div>
     </div>
 

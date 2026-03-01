@@ -138,7 +138,7 @@ class Game {
         this.combat = null;
         this.ui = null;
         this.turn = 0;
-        this.state = 'title'; // title, explore, town, contracts, inventory, shop, look, throw, help, dead, overview, tavern, mine
+        this.state = 'title'; // title, explore, town, contracts, inventory, shop, look, throw, help, dead, overview, tavern, mine, legend, quote
         this._contractOptions = [];
         this._shopItems = [];
         this._inputLocked = false;
@@ -163,6 +163,11 @@ class Game {
         this._minePlayerX = 0;
         this._minePlayerY = 0;
         this._mineEntrance = null; // {x, y} on the overworld
+        // Night/day cycle
+        this.isNight = false;
+        this.nightTurnsLeft = 0;
+        // Quote trigger tiles
+        this.mapQuotes = {};
     }
 
     init() {
@@ -234,6 +239,14 @@ class Game {
         this._spawnSpecialCharacters();
 
         this.turn = 0;
+        this.isNight = false;
+        this.nightTurnsLeft = 0;
+        this.mapQuotes = {};
+        if (typeof MAP_QUOTES !== 'undefined') {
+            for (const q of MAP_QUOTES) {
+                this.mapQuotes[q.x + ',' + q.y] = q;
+            }
+        }
         this.state = 'explore';
 
         this.ui.addMessage('You awake at the edge of Tucson in the predawn, two mules hobbled beside you with rawhide hackamores. ', 'info');
@@ -490,6 +503,24 @@ class Game {
             return;
         }
 
+        // Legend screen
+        if (this.state === 'legend') {
+            if (key === 'Escape') {
+                this.ui.hideLegend();
+                this.state = 'explore';
+            }
+            return;
+        }
+
+        // Quote trigger screen
+        if (this.state === 'quote') {
+            if (key === 'Escape' || key === 'Enter') {
+                this.ui.hideQuoteTrigger();
+                this.state = 'explore';
+            }
+            return;
+        }
+
         // Town screen
         if (this.state === 'town') {
             this._handleTownInput(key);
@@ -556,6 +587,13 @@ class Game {
                     return;
                 case 'o': case 'O':
                     this._openOverview();
+                    return;
+                case 'n': case 'N':
+                    this.ui.showLegend();
+                    this.state = 'legend';
+                    return;
+                case 'k': case 'K':
+                    this._tryCamp();
                     return;
                 case 'Enter':
                     this._tryEnterMine();
@@ -815,6 +853,13 @@ class Game {
             this.ui.addMessage(`You enter ${loc.name}. Find the campfire at the center to access town services.`, 'info');
         } else if (loc && tileType === 'TOWN_FLOOR') {
             this.ui.addMessage(`${loc.name}`, 'system');
+        }
+
+        // Check for quote trigger tile
+        const quoteKey = nx + ',' + ny;
+        if (this.mapQuotes[quoteKey]) {
+            this._showMapQuote(this.mapQuotes[quoteKey]);
+            delete this.mapQuotes[quoteKey];
         }
 
         return true;
@@ -1643,9 +1688,69 @@ class Game {
         }
     }
 
+    _showMapQuote(quote) {
+        this.ui.showQuoteTrigger(quote);
+        this.state = 'quote';
+    }
+
+    _tryCamp() {
+        if (!this.isNight) {
+            this.ui.addMessage('It is not yet night. You press on.', 'system');
+            return;
+        }
+        const tileName = this.map.getTile(this.player.x, this.player.y).name;
+        const messages = [
+            `You make a dry camp on the ${tileName}. You awake in the morning and move on.The sun in the east flushes pale streaks of light and then a deeper run of color like blood seeping up in sudden reaches flaring planewise and where the earth drained up into the sky at the edge of creation the top of the sun rose out of nothing like the head of a great red phallus until it clears the unseen rim and sits
+squat and pulsing and malevolent behind you.  The shadows of the smallest stones lay like pencil lines across the sand and the shapes of you and your mules advance elongate before you like strands of the night from which you've ridden, like tentacles to bind you to the darkness yet to come.`,
+            `You bivouac on the ${tileName}. Dawn comes gray and cold. You move on.`,     
+            `You halt and make a dry camp without wood or water and the wretched mules huddle and whimper like dogs.`,
+            `You bivouack in a barren swale and you and your mules lay down together and all night the dry wind blows down the desert and the wind is all but silent for there is nothing of resonance among those rocks.`,
+            `You make camp among pifion and juniper and the fire leans downwind in the darkness and hot chains of sparks race among the scrub.`,
+            `Today you rode through marl and terracotta and rifts of copper shale and you rode through a wooded swag and out upon a promontory overlooking a bleak and barren caldera. You you made a dry and fireless camp.`,
+            `Upon your bedrool tou are reckoning out the camp in that incoordinate waste by palest starlight or in blackness absolute where you sit among the rocks without fire or bread or camaraderie any more than banded apes`,
+            `A lobeshaped moon rose over the black shapes of the mountains dimming out the eastern stars and along the nearby ridge the white blooms of flowering yuccas moved in the wind and in the night bats came from some nether part of the world to stand on leather wings like dark satanic hummingbirds and feed at the mouths of those flowers.`,
+            `Today you rode down a long slope in the cold blue evening and through a barren bajada grown only with sporadic ocotillo and stands of grama and you made camp in the flat and all night the wind blew and you could see other fires burning on the desert to the north.`
+        ];
+        const msg = messages[Math.floor(ROT.RNG.getUniform() * messages.length)];
+        this.ui.addMessage(msg, 'info');
+        this.isNight = false;
+        this.nightTurnsLeft = 0;
+        // Advance 100 turns silently (thirst ticks, entity actions)
+        for (let i = 0; i < 25; i++) {
+            this.turn++;
+            this.player.turnsPlayed++;
+            this.player.updateThirst(this);
+            for (const mule of this.player.mules) {
+                mule.update(this);
+            }
+            for (const entity of this.entities) {
+                if (entity.alive) entity.act(this);
+            }
+        }
+        this.render();
+        this.ui.renderAll(this.player);
+        this.ui.updateTopBar(this.turn, this.player, this.map);
+    }
+
     _endTurn() {
         this.turn++;
         this.player.turnsPlayed++;
+
+        // Night/day cycle
+        if (this.turn % 500 === 0 && !this.isNight) {
+            this.isNight = true;
+            this.nightTurnsLeft = 5;
+            this.ui.addMessage('The sun is just down and to the west lay reefs of bloodred clouds.', 'info');
+            this.ui.addMessage('Night falls over the desert. Orion rises in southwest like a great electric kite.. Press K to make camp or keep moving in the dark.', 'info');
+        }
+        if (this.isNight) {
+            this.nightTurnsLeft--;
+            if (this.nightTurnsLeft <= 0) {
+                this.isNight = false;
+                this.ui.addMessage('Tethered to the polestar you rode the Dipper round while Orion rose in the southwest like a great electric kite. ', 'info');
+                this.ui.addMessage(' ', 'info');
+            }
+        }
 
         this.player.updateThirst(this);
 
@@ -1734,7 +1839,8 @@ class Game {
         const display = this.display;
         display.clear();
 
-        this.map.computeFOV(this.player.x, this.player.y, FOV_RADIUS);
+        const fovRadius = this.isNight ? 4 : FOV_RADIUS;
+        this.map.computeFOV(this.player.x, this.player.y, fovRadius);
 
         const vpX = Math.max(0, Math.min(this.map.width - VIEWPORT_W, this.player.x - Math.floor(VIEWPORT_W / 2)));
         const vpY = Math.max(0, Math.min(this.map.height - VIEWPORT_H, this.player.y - Math.floor(VIEWPORT_H / 2)));
@@ -1748,7 +1854,9 @@ class Game {
 
                 if (this.map.visible[my] && this.map.visible[my][mx]) {
                     const tile = this.map.getTile(mx, my);
-                    display.draw(vx, vy, tile.char, tile.fg, tile.bg);
+                    const fg = this.isNight ? this._applyNightColor(tile.fg) : tile.fg;
+                    const bg = this.isNight ? this._applyNightColor(tile.bg) : tile.bg;
+                    display.draw(vx, vy, tile.char, fg, bg);
                 } else if (this.map.explored[my] && this.map.explored[my][mx]) {
                     const tile = this.map.getTile(mx, my);
                     display.draw(vx, vy, tile.char, this._dimColor(tile.fg), '#0a0804');
@@ -1809,6 +1917,18 @@ class Game {
         const dg = Math.floor(g * factor);
         const db = Math.floor(b * factor);
         return '#' + dr.toString(16).padStart(2, '0') + dg.toString(16).padStart(2, '0') + db.toString(16).padStart(2, '0');
+    }
+
+    _applyNightColor(hex) {
+        if (!hex || hex.length < 7) return '#0a0a0a';
+        const r = parseInt(hex.substring(1, 3), 16);
+        const g = parseInt(hex.substring(3, 5), 16);
+        const b = parseInt(hex.substring(5, 7), 16);
+        const factor = 0.35;
+        const dr = Math.floor(r * factor);
+        const dg = Math.floor(g * factor);
+        const db = Math.floor(b * factor * 1.2); // slight blue tint for night
+        return '#' + Math.min(255, dr).toString(16).padStart(2, '0') + Math.min(255, dg).toString(16).padStart(2, '0') + Math.min(255, db).toString(16).padStart(2, '0');
     }
 
     gameOver() {
